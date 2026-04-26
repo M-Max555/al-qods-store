@@ -53,9 +53,8 @@ const model = genAI.getGenerativeModel({
 app.post('/chat', async (req, res) => {
   try {
     const { messages, context } = req.body;
-    console.log("Message received:", messages[messages.length - 1]?.parts?.[0]?.text || "No text content");
-    console.log("Context state:", context?.conversationState);
-
+    console.log("Incoming message:", messages[messages.length - 1]?.parts?.[0]?.text || "No text content");
+    
     const productsInfo = context?.productsInfo || 'لا يوجد منتجات.';
     const cartInfo = context?.cartInfo || 'السلة فارغة.';
     const totalPrice = context?.totalPrice || 0;
@@ -79,16 +78,29 @@ app.post('/chat', async (req, res) => {
     }
 
     const result = await model.generateContent({ contents });
-    let aiMessageText = result.response.text();
+    console.log("Gemini raw response:", JSON.stringify(result.response, null, 2));
+    
+    let aiMessageText = "";
+    try {
+      aiMessageText = result.response.text();
+    } catch (err) {
+      console.error("Error extracting text from Gemini:", err);
+      // Fallback extraction
+      aiMessageText = result.response.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    }
 
     let parsedResponse;
     try {
       parsedResponse = JSON.parse(aiMessageText);
     } catch (e) {
-      parsedResponse = { reply: "معلش في مشكلة صغيرة 🤖 ممكن تعيد كلامك تاني؟", products: [] };
+      console.error("JSON Parse Error:", e, "Raw Text:", aiMessageText);
+      parsedResponse = { 
+        reply: aiMessageText || "تمام يا فندم 👌 وضحلي أكتر وأنا أساعدك فوراً", 
+        products: [] 
+      };
     }
 
-    let aiReply = parsedResponse.reply || "";
+    let aiReply = parsedResponse.reply || "تمام يا فندم 👌 وضحلي أكتر وأنا أساعدك فوراً";
     const aiProducts = parsedResponse.products || [];
     const nextState = parsedResponse.state || currentState;
 
@@ -120,8 +132,12 @@ app.post('/chat', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error:', error);
-    res.json({ type: 'message', content: "محمد موجود بس في مشكلة بسيطة 🤖 حاول تاني" });
+    console.error('Gemini API Error:', error);
+    res.json({ 
+      type: 'message', 
+      content: "تمام يا فندم 👌 وضحلي أكتر وأنا أساعدك فوراً",
+      state: 'browsing'
+    });
   }
 });
 
