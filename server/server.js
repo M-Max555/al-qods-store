@@ -53,6 +53,8 @@ const model = genAI.getGenerativeModel({
 app.post('/chat', async (req, res) => {
   try {
     const { messages, context } = req.body;
+    console.log("Message received:", messages[messages.length - 1]?.parts?.[0]?.text || "No text content");
+    console.log("Context state:", context?.conversationState);
 
     const productsInfo = context?.productsInfo || 'لا يوجد منتجات.';
     const cartInfo = context?.cartInfo || 'السلة فارغة.';

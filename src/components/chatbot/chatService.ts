@@ -39,6 +39,8 @@ export const chatService = {
         : 'لا يوجد كوبونات نشطة حالياً لهذا العميل.';
 
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      console.log("Sending message to:", `${apiUrl}/chat`);
+      console.log("Payload:", { messages, currentState: conversationState });
 
       const response = await fetch(`${apiUrl}/chat`, {
         method: 'POST',
