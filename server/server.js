@@ -91,44 +91,39 @@ app.post('/chat', async (req, res) => {
     // Combine context with user message for single-turn prompt
     const prompt = `
 أنت محمد، بائع محترف في متجر "القدس للأجهزة المنزلية".
+هدفك تفهم طلب العميل وتساعده يختار الصح وتقفل البيع.
+أسلوبك مصري بسيط وودود وواثق ومختصر جداً.
 
-هدفك:
-- تفهم طلب العميل وتساعده يختار الصح.
-- ترشّح منتجات موجودة في المعرض بناءً على السياق.
-- تقفل البيع وتوجه العميل يطلب.
-
-أسلوبك:
-- مصري بسيط وودود (بتاع سوق).
-- واثق في بضاعتك وجدع.
-- مش روبوت نهائي.. ردودك قصيرة ومباشرة (ماكس 3 سطور).
-
-قواعد صارمة:
-- متقولش "كيف أساعدك" أو "وضحلي أكتر" كترار.
-- اسأل العميل أسئلة ذكية (مثلاً: تحب حاجة سعرها كام؟ - محتاج ماركة معينة؟).
-- حاول دايماً تقفل الطلب (عاوز أحجزلك قطعة؟ - تحب أأكدلك الطلب دلوقتي؟).
-
-سياق المحرض (المنتجات والعروض الحالية):
+سياق المنتجات:
 ${chatContext}
 
-سؤال العميل الحالي: ${userMessage}
+سؤال العميل: ${userMessage}
 
 رد يا محمد بالعامية المصرية (JSON format):
-{
-  "reply": "نص الرد هنا",
-  "state": "browsing/interested/ready_to_buy",
-  "products": []
-}
+{ "reply": "...", "state": "...", "products": [] }
 `;
 
-    console.log("Calling Gemini API with sales prompt...");
-    const result = await model.generateContent(prompt);
+    console.log("--- DEBUG START ---");
+    console.log("API KEY (masked):", process.env.GEMINI_API_KEY ? `${process.env.GEMINI_API_KEY.substring(0, 8)}...` : "NOT FOUND");
+    console.log("User Message:", userMessage);
+    console.log("Calling Gemini with prompt...");
+
+    let result;
+    try {
+      result = await model.generateContent(prompt);
+      console.log("GEMINI RAW RESULT:", JSON.stringify(result, null, 2));
+    } catch (apiError) {
+      console.error("GEMINI API CALL FAILED:", apiError);
+      throw apiError; // Catch in outer block
+    }
+
     const response = await result.response;
     const aiMessageText = response.text();
     
-    console.log("AI TEXT:", aiMessageText);
+    console.log("AI TEXT EXTRACTED:", aiMessageText);
 
     if (!aiMessageText || aiMessageText.trim() === "") {
-      console.error("Empty AI response");
+      console.error("Gemini returned EMPTY text");
       return res.json({
         type: 'message',
         content: "تحت أمرك يا فندم 👌 عندي ليك عرض بجد مش هيتكرر على الخلاطات والمطاحن.. تحب أقولك التفاصيل؟",
@@ -149,6 +144,8 @@ ${chatContext}
       console.error("Parse error:", e);
       parsedResponse = { reply: aiMessageText, products: [] };
     }
+
+    console.log("--- DEBUG END ---");
 
     let aiReply = parsedResponse.reply || aiMessageText;
     const aiProducts = parsedResponse.products || [];
@@ -182,7 +179,7 @@ ${chatContext}
     });
 
   } catch (error) {
-    console.error('Gemini Error:', error);
+    console.error('CRITICAL ERROR IN /CHAT:', error);
     res.json({ 
       type: 'message', 
       content: "تحت أمرك يا فندم 👌 عندي ليك عرض بجد مش هيتكرر.. تحب أقولك التفاصيل؟",
