@@ -89,33 +89,47 @@ app.post('/chat', async (req, res) => {
 `;
 
     // Combine context with user message for single-turn prompt
-    const fullPrompt = `[Context:\n${chatContext}]\n\nUser Message: ${userMessage}`;
+    const prompt = `
+أنت مساعد بيع لمتجر "القدس للأجهزة المنزلية".
+رد باللهجة المصرية العامية الودودة والمختصرة جداً.
+استخدم المعلومات دي لو العميل سأل:
+${chatContext}
 
-    console.log("Calling Gemini API...");
-    const result = await model.generateContent(fullPrompt);
-    console.log("FULL GEMINI RESPONSE:", JSON.stringify(result, null, 2));
+سؤال العميل: ${userMessage}
+`;
+
+    console.log("Calling Gemini API with prompt...");
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const aiMessageText = response.text();
     
-    let aiMessageText = "";
-    try {
-      aiMessageText = result.response.text();
-    } catch (err) {
-      console.error("Error extracting text from Gemini:", err);
-      // Fallback extraction
-      aiMessageText = result.response.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    console.log("AI TEXT:", aiMessageText);
+
+    if (!aiMessageText || aiMessageText.trim() === "") {
+      console.error("Empty AI response");
+      return res.json({
+        type: 'message',
+        content: "في عرض حلو عندنا دلوقتي 🔥 تحب أقولك عليه؟",
+        state: 'browsing'
+      });
     }
 
     let parsedResponse;
     try {
-      parsedResponse = JSON.parse(aiMessageText);
+      // Try to parse if AI returned JSON, otherwise treat as plain text
+      if (aiMessageText.includes('{') && aiMessageText.includes('}')) {
+        const jsonStart = aiMessageText.indexOf('{');
+        const jsonEnd = aiMessageText.lastIndexOf('}') + 1;
+        parsedResponse = JSON.parse(aiMessageText.substring(jsonStart, jsonEnd));
+      } else {
+        parsedResponse = { reply: aiMessageText, products: [] };
+      }
     } catch (e) {
-      console.error("JSON Parse Error:", e, "Raw Text:", aiMessageText);
-      parsedResponse = { 
-        reply: aiMessageText || "تمام يا فندم 👌 وضحلي أكتر وأنا أساعدك فوراً", 
-        products: [] 
-      };
+      console.error("Parse error, using as plain text:", e);
+      parsedResponse = { reply: aiMessageText, products: [] };
     }
 
-    let aiReply = parsedResponse.reply || "تمام يا فندم 👌 وضحلي أكتر وأنا أساعدك فوراً";
+    let aiReply = parsedResponse.reply || aiMessageText;
     const aiProducts = parsedResponse.products || [];
     const nextState = parsedResponse.state || currentState;
 
@@ -150,7 +164,7 @@ app.post('/chat', async (req, res) => {
     console.error('Gemini Error:', error);
     res.json({ 
       type: 'message', 
-      content: "تمام يا فندم 👌 وضحلي أكتر وأنا أساعدك فوراً",
+      content: "في عرض حلو عندنا دلوقتي 🔥 تحب أقولك عليه؟",
       state: 'browsing'
     });
   }
