@@ -90,15 +90,37 @@ app.post('/chat', async (req, res) => {
 
     // Combine context with user message for single-turn prompt
     const prompt = `
-أنت مساعد بيع لمتجر "القدس للأجهزة المنزلية".
-رد باللهجة المصرية العامية الودودة والمختصرة جداً.
-استخدم المعلومات دي لو العميل سأل:
+أنت محمد، بائع محترف في متجر "القدس للأجهزة المنزلية".
+
+هدفك:
+- تفهم طلب العميل وتساعده يختار الصح.
+- ترشّح منتجات موجودة في المعرض بناءً على السياق.
+- تقفل البيع وتوجه العميل يطلب.
+
+أسلوبك:
+- مصري بسيط وودود (بتاع سوق).
+- واثق في بضاعتك وجدع.
+- مش روبوت نهائي.. ردودك قصيرة ومباشرة (ماكس 3 سطور).
+
+قواعد صارمة:
+- متقولش "كيف أساعدك" أو "وضحلي أكتر" كترار.
+- اسأل العميل أسئلة ذكية (مثلاً: تحب حاجة سعرها كام؟ - محتاج ماركة معينة؟).
+- حاول دايماً تقفل الطلب (عاوز أحجزلك قطعة؟ - تحب أأكدلك الطلب دلوقتي؟).
+
+سياق المحرض (المنتجات والعروض الحالية):
 ${chatContext}
 
-سؤال العميل: ${userMessage}
+سؤال العميل الحالي: ${userMessage}
+
+رد يا محمد بالعامية المصرية (JSON format):
+{
+  "reply": "نص الرد هنا",
+  "state": "browsing/interested/ready_to_buy",
+  "products": []
+}
 `;
 
-    console.log("Calling Gemini API with prompt...");
+    console.log("Calling Gemini API with sales prompt...");
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const aiMessageText = response.text();
@@ -109,14 +131,13 @@ ${chatContext}
       console.error("Empty AI response");
       return res.json({
         type: 'message',
-        content: "في عرض حلو عندنا دلوقتي 🔥 تحب أقولك عليه؟",
+        content: "تحت أمرك يا فندم 👌 عندي ليك عرض بجد مش هيتكرر على الخلاطات والمطاحن.. تحب أقولك التفاصيل؟",
         state: 'browsing'
       });
     }
 
     let parsedResponse;
     try {
-      // Try to parse if AI returned JSON, otherwise treat as plain text
       if (aiMessageText.includes('{') && aiMessageText.includes('}')) {
         const jsonStart = aiMessageText.indexOf('{');
         const jsonEnd = aiMessageText.lastIndexOf('}') + 1;
@@ -125,7 +146,7 @@ ${chatContext}
         parsedResponse = { reply: aiMessageText, products: [] };
       }
     } catch (e) {
-      console.error("Parse error, using as plain text:", e);
+      console.error("Parse error:", e);
       parsedResponse = { reply: aiMessageText, products: [] };
     }
 
@@ -164,7 +185,7 @@ ${chatContext}
     console.error('Gemini Error:', error);
     res.json({ 
       type: 'message', 
-      content: "في عرض حلو عندنا دلوقتي 🔥 تحب أقولك عليه؟",
+      content: "تحت أمرك يا فندم 👌 عندي ليك عرض بجد مش هيتكرر.. تحب أقولك التفاصيل؟",
       state: 'browsing'
     });
   }
