@@ -22,7 +22,7 @@ export const productApi = {
   },
   getFeatured: async (): Promise<ApiResponse<Product[]>> => {
     const products = await productService.getAllProducts();
-    return ok(products.filter(p => p.featured));
+    return ok(products.filter(p => p.isFeatured));
   },
   getByCategory: async (category: string): Promise<ApiResponse<Product[]>> => {
     const products = await productService.getAllProducts();
