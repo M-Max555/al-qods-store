@@ -16,6 +16,11 @@ app.get('/', (req, res) => {
 });
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
+
+// Debugging API Key (Masked for safety)
+const apiKey = process.env.GEMINI_API_KEY;
+console.log("GEMINI_API_KEY status:", apiKey ? `Present (Starts with: ${apiKey.substring(0, 5)}...)` : "MISSING");
+
 const model = genAI.getGenerativeModel({
   model: "gemini-1.5-flash",
   generationConfig: {
@@ -78,7 +83,7 @@ app.post('/chat', async (req, res) => {
     }
 
     const result = await model.generateContent({ contents });
-    console.log("Gemini raw response:", JSON.stringify(result.response, null, 2));
+    console.log("FULL GEMINI RESPONSE:", JSON.stringify(result, null, 2));
     
     let aiMessageText = "";
     try {
@@ -132,7 +137,7 @@ app.post('/chat', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Gemini API Error:', error);
+    console.error('Gemini Error:', error);
     res.json({ 
       type: 'message', 
       content: "تمام يا فندم 👌 وضحلي أكتر وأنا أساعدك فوراً",
