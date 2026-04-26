@@ -58,7 +58,22 @@ const model = genAI.getGenerativeModel({
 app.post('/chat', async (req, res) => {
   try {
     const { messages, context } = req.body;
-    console.log("Incoming message:", messages[messages.length - 1]?.parts?.[0]?.text || "No text content");
+    
+    // Extract last user message safely
+    const lastMessage = messages && messages.length > 0 ? messages[messages.length - 1] : null;
+    const userMessage = typeof lastMessage?.content === 'string' ? lastMessage.content : 
+                        (lastMessage?.parts?.[0]?.text || "");
+
+    console.log("User message:", userMessage);
+
+    if (!userMessage) {
+      console.log("Warning: No user message found in request");
+      return res.json({ 
+        type: 'message', 
+        content: "تمام يا فندم 👌 وضحلي أكتر وأنا أساعدك فوراً",
+        state: 'browsing'
+      });
+    }
     
     const productsInfo = context?.productsInfo || 'لا يوجد منتجات.';
     const cartInfo = context?.cartInfo || 'السلة فارغة.';
@@ -73,16 +88,11 @@ app.post('/chat', async (req, res) => {
 الكوبونات: ${context?.couponInfo || 'لا يوجد'}
 `;
 
-    const contents = messages.map(m => ({
-      role: m.role === 'assistant' ? 'model' : 'user',
-      parts: [{ text: typeof m.content === 'string' ? m.content : JSON.stringify(m.content) }]
-    }));
+    // Combine context with user message for single-turn prompt
+    const fullPrompt = `[Context:\n${chatContext}]\n\nUser Message: ${userMessage}`;
 
-    if (contents.length > 0 && contents[contents.length - 1].role === 'user') {
-      contents[contents.length - 1].parts[0].text = `[Context:\n${chatContext}]\n\n${contents[contents.length - 1].parts[0].text}`;
-    }
-
-    const result = await model.generateContent({ contents });
+    console.log("Calling Gemini API...");
+    const result = await model.generateContent(fullPrompt);
     console.log("FULL GEMINI RESPONSE:", JSON.stringify(result, null, 2));
     
     let aiMessageText = "";
