@@ -1,0 +1,27 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // Product Images
+    match /products/{imageId} {
+      // Anyone can view product images
+      allow read: if true;
+      // Only admins can upload/delete
+      allow write: if isAdmin() && request.resource.size < 5 * 1024 * 1024 && request.resource.contentType.matches('image/.*');
+    }
+    
+    // User Avatars (optional feature)
+    match /users/{userId}/{imageId} {
+      allow read: if true;
+      allow write: if isAuthenticated() && request.auth.uid == userId && request.resource.size < 2 * 1024 * 1024 && request.resource.contentType.matches('image/.*');
+    }
+  }
+}

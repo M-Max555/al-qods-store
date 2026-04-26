@@ -1,0 +1,321 @@
+@import "tailwindcss";
+
+/* ─── Al Quds Design System - Material Design 3 Tokens ──────────────────────── */
+@theme {
+  /* Primary */
+  --color-primary: #af101a;
+  --color-primary-container: #d32f2f;
+  --color-on-primary: #ffffff;
+  --color-on-primary-container: #fff2f0;
+  --color-primary-hover: #930010;
+
+  /* Secondary */
+  --color-secondary: #5f5e5e;
+  --color-on-secondary: #ffffff;
+  --color-secondary-container: #e2dfde;
+
+  /* Surfaces */
+  --color-surface: #fbf9f9;
+  --color-surface-dim: #dbdad9;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #f5f3f3;
+  --color-surface-container: #efeded;
+  --color-surface-container-high: #e9e8e7;
+  --color-surface-container-highest: #e3e2e2;
+  --color-on-surface: #1b1c1c;
+  --color-on-surface-variant: #5b403d;
+
+  /* Inverse */
+  --color-inverse-surface: #303031;
+  --color-inverse-on-surface: #f2f0f0;
+
+  /* Outline */
+  --color-outline: #8f6f6c;
+  --color-outline-variant: #e4beba;
+
+  /* Error */
+  --color-error: #ba1a1a;
+  --color-on-error: #ffffff;
+  --color-error-container: #ffdad6;
+  --color-on-error-container: #93000a;
+
+  /* Background */
+  --color-background: #fbf9f9;
+  --color-on-background: #1b1c1c;
+
+  /* Header */
+  --color-header-bg: #1a1a1a;
+
+  /* Border Radius */
+  --radius-sm: 0.125rem;
+  --radius-DEFAULT: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+  --radius-full: 9999px;
+
+  /* Font Family */
+  --font-sans: 'IBM Plex Sans Arabic', sans-serif;
+
+  /* Animations */
+  --animate-fade-in: fade-in 0.3s ease-out forwards;
+  --animate-fade-in-up: fade-in-up 0.5s ease-out forwards;
+  --animate-slide-down: slide-down 0.3s ease forwards;
+  --animate-slide-up: slide-up 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  --animate-scale-in: scale-in 0.3s ease forwards;
+  --animate-bounce-in: bounce-in 0.4s ease forwards;
+}
+
+/* ─── Typography Utilities ──────────────────────────────────────────────────── */
+@utility font-headline-xl {
+  font-family: 'IBM Plex Sans Arabic', sans-serif;
+  font-size: 40px;
+  line-height: 52px;
+  font-weight: 700;
+}
+
+@utility font-headline-lg {
+  font-family: 'IBM Plex Sans Arabic', sans-serif;
+  font-size: 32px;
+  line-height: 44px;
+  font-weight: 600;
+}
+
+@utility font-headline-md {
+  font-family: 'IBM Plex Sans Arabic', sans-serif;
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 600;
+}
+
+@utility font-body-lg {
+  font-family: 'IBM Plex Sans Arabic', sans-serif;
+  font-size: 18px;
+  line-height: 28px;
+  font-weight: 400;
+}
+
+@utility font-body-md {
+  font-family: 'IBM Plex Sans Arabic', sans-serif;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 400;
+}
+
+@utility font-body-sm {
+  font-family: 'IBM Plex Sans Arabic', sans-serif;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 400;
+}
+
+@utility font-label-md {
+  font-family: 'IBM Plex Sans Arabic', sans-serif;
+  font-size: 14px;
+  line-height: 18px;
+  letter-spacing: 0.02em;
+  font-weight: 600;
+}
+
+@utility font-label-sm {
+  font-family: 'IBM Plex Sans Arabic', sans-serif;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+}
+
+/* ─── Component Utilities ───────────────────────────────────────────────────── */
+@utility page-container {
+  max-width: 1280px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+@utility btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: #d32f2f;
+  color: #ffffff;
+  font-weight: 600;
+  padding: 0.625rem 1.5rem;
+  border-radius: 0.75rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border: none;
+}
+
+@utility btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: #ffffff;
+  color: #d32f2f;
+  font-weight: 600;
+  padding: 0.625rem 1.5rem;
+  border-radius: 0.75rem;
+  border: 2px solid #d32f2f;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+@utility card-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@utility rtl-flip {
+  transform: scaleX(-1);
+}
+
+@utility badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding-left: 0.375rem;
+  padding-right: 0.375rem;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 9999px;
+}
+
+@utility input-field {
+  width: 100%;
+  border: 1px solid #e3e2e2;
+  border-radius: 0.75rem;
+  padding: 0.75rem 1rem;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  background-color: #ffffff;
+  color: #1b1c1c;
+}
+
+@utility section-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1b1c1c;
+  margin-bottom: 0.5rem;
+}
+
+@utility section-subtitle {
+  color: #5f5e5e;
+  font-size: 1rem;
+  margin-bottom: 2rem;
+}
+
+@utility text-shadow {
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+/* ─── Keyframes ─────────────────────────────────────────────────────────────── */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-down {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes bounce-in {
+  0% { transform: scale(0); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(24px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)  scale(1); }
+}
+
+/* ─── Base Styles ───────────────────────────────────────────────────────────── */
+* {
+  box-sizing: border-box;
+  font-family: 'IBM Plex Sans Arabic', sans-serif;
+}
+
+html {
+  direction: rtl;
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: #fbf9f9;
+  color: #1b1c1c;
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Material Symbols */
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #f5f3f3; }
+::-webkit-scrollbar-thumb { background: #d32f2f; border-radius: 9999px; }
+::-webkit-scrollbar-thumb:hover { background: #af101a; }
+
+/* Card hover */
+.card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+}
+
+/* Input focus */
+.input-field:focus {
+  outline: none;
+  border-color: #d32f2f;
+  box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.12);
+}
+
+/* Button states */
+.btn-primary:hover { background-color: #af101a; box-shadow: 0 4px 16px rgba(211, 47, 47, 0.3); }
+.btn-primary:active { transform: scale(0.97); }
+.btn-secondary:hover { background-color: rgba(211, 47, 47, 0.06); }
+.btn-secondary:active { transform: scale(0.97); }
+
+/* Skeleton */
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Responsive container */
+@media (min-width: 640px) {
+  .page-container { padding-left: 24px; padding-right: 24px; }
+}
+@media (min-width: 1024px) {
+  .page-container { padding-left: 32px; padding-right: 32px; }
+}
+
+/* Hero video placeholder */
+.hero-gradient-overlay {
+  background: linear-gradient(rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.55));
+}
