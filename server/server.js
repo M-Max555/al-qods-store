@@ -10,6 +10,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Root route for health check
+app.get('/', (req, res) => {
+  res.send('Al Qods API is running 🚀');
+});
+
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 const model = genAI.getGenerativeModel({
   model: "gemini-1.5-flash",
