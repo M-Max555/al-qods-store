@@ -22,7 +22,7 @@ const apiKey = process.env.GEMINI_API_KEY;
 console.log("GEMINI_API_KEY status:", apiKey ? `Present (Starts with: ${apiKey.substring(0, 5)}...)` : "MISSING");
 
 const model = genAI.getGenerativeModel({
-  model: "gemini-1.5-flash",
+  model: "gemini-1.5-flash-8b",
   generationConfig: {
     responseMimeType: "application/json",
   },
