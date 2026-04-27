@@ -3,7 +3,6 @@ import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
-import OpenAI from "openai";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -19,51 +18,70 @@ app.get('/', (req, res) => {
   res.send('Al Qods API is running 🚀');
 });
 
-const openai = new OpenAI({
-  apiKey: process.env.TOGETHER_API_KEY,
-  baseURL: "https://api.together.xyz/v1"
-});
-
 app.post("/chat", async (req, res) => {
   try {
     const userMessage = req.body?.message || "مرحبا";
 
     console.log("USER:", userMessage);
 
-    const completion = await openai.chat.completions.create({
-      model: "meta-llama/Llama-3-8b-chat-hf",
-      messages: [
-        {
-          role: "system",
-          content: `
+    const response = await fetch(
+      "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2",
+      {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${process.env.HUGGINGFACE_API_KEY}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          inputs: `
 أنت محمد بائع مصري شاطر.
 
 - افهم العميل الأول
+- رد مختصر (سطرين)
 - متكررّش كلامك
-- رد مختصر
 - حاول تقفل البيع
-`
-        },
-        {
-          role: "user",
-          content: userMessage
-        }
-      ]
-    });
 
-    const reply = completion.choices?.[0]?.message?.content;
+سؤال العميل:
+${userMessage}
+          `
+        })
+      }
+    );
 
-    console.log("AI:", reply);
+    const data = await response.json();
 
-    res.json({
-      reply: reply || "قولّي عايز إيه وأنا أظبطك 👌"
-    });
+    console.log("HF RESPONSE:", data);
+
+    let reply = "";
+
+    if (Array.isArray(data)) {
+      reply = data[0]?.generated_text || "";
+    } else if (data?.generated_text) {
+      reply = data.generated_text;
+    }
+
+    // Mistral often includes the prompt in the response, let's clean it if possible
+    if (reply.includes("سؤال العميل:")) {
+      reply = reply.split("سؤال العميل:").pop().trim();
+      // Remove the user message part if it was echoed back
+      if (reply.startsWith(userMessage)) {
+        reply = reply.replace(userMessage, "").trim();
+      }
+    }
+
+    if (!reply) {
+      return res.json({
+        reply: "قولّي عايز إيه وأنا أظبطك 👌"
+      });
+    }
+
+    res.json({ reply });
 
   } catch (err) {
-    console.error("TOGETHER ERROR FULL:", err);
+    console.error("HF ERROR:", err);
 
-    return res.json({
-      reply: "ERROR: " + (err?.message || "unknown")
+    res.json({
+      reply: "ERROR: " + err.message
     });
   }
 });
