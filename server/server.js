@@ -21,64 +21,63 @@ const openai = new OpenAI({
 
 app.post("/chat", async (req, res) => {
   try {
-    const { messages, context } = req.body;
-    
-    // Extract user message
-    const lastMessage = messages && messages.length > 0 ? messages[messages.length - 1] : null;
-    const userMessage = typeof lastMessage?.content === 'string' ? lastMessage.content : 
-                        (req.body?.message || "مرحبا");
+    const userMessage =
+      req.body?.message ||
+      req.body?.messages?.[0]?.content ||
+      "مرحبا";
 
-    // Product and Cart context
-    const productsInfo = context?.productsInfo || 'لا يوجد منتجات حالياً.';
-    const cartInfo = context?.cartInfo || 'السلة فارغة.';
-    const currentState = context?.conversationState || 'browsing';
+    console.log("USER:", userMessage);
 
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
         {
           role: "system",
-          content: `أنت محمد، بائع شاطر وجدع في معرض "القدس للأجهزة المنزلية".
-قواعد الرد:
-1. الرد مصري عامي بسيط جداً (ابعد عن الكليشيهات).
-2. الرد سطرين بالكتير وممنوع تكرر نفس الجملة كل مرة.
-3. لو سأل عن سعر: اديله السعر أو الرينج فوراً من البيانات.
-4. لو سأل عن منتج: رشحله أحسن موديل متاح بذكاء.
-5. لو سلم: رد بود وحرارة وأدخل في الموضوع (متقولش كيف أساعدك).
-6. خليك ذكي: لو العميل متردد، طمنه بضمان أو جودة.
+          content: `
+أنت "محمد" بائع مصري محترف في متجر أدوات منزلية.
 
-المعطيات:
-الحالة: ${currentState}
-المنتجات: ${productsInfo}
-السلة: ${cartInfo}
+🎯 هدفك:
+- تفهم العميل الأول
+- ترشّح منتجات
+- تقفل البيع
 
-رد JSON: { "reply": "...", "state": "...", "products": [] }`
+📌 قواعد:
+- متكررّش نفس الجملة
+- متبقاش روبوت
+- رد مختصر (سطرين max)
+- اسأل سؤال في الآخر
+
+🔥 مثال:
+العميل: عاوز خلاط
+انت:
+"تمام يا فندم 👌 تحب حاجة في حدود كام؟
+عندي موديل ممتاز ومجرب"
+`
         },
         {
           role: "user",
           content: userMessage
         }
-      ],
-      response_format: { type: "json_object" }
+      ]
     });
 
-    const aiResponse = JSON.parse(completion.choices[0].message.content);
-    const reply = aiResponse.reply;
+    const reply = completion.choices?.[0]?.message?.content;
 
-    res.json({ 
-      type: 'message',
-      content: reply,
-      products: aiResponse.products || [],
-      state: aiResponse.state || currentState
-    });
+    console.log("AI:", reply);
+
+    if (!reply) {
+      return res.json({
+        reply: "تمام يا فندم 👌 قولّي محتاج إيه وأنا أظبطك"
+      });
+    }
+
+    res.json({ reply });
 
   } catch (err) {
-    console.error("OpenAI Error:", err);
+    console.error("OPENAI ERROR:", err);
+
     res.json({
-      type: 'message',
-      content: "تمام يا فندم 👌 قولّي محتاج إيه وأنا أظبطك",
-      products: [],
-      state: 'browsing'
+      reply: "في مشكلة بسيطة دلوقتي يا فندم 😅 جرب تاني"
     });
   }
 });
