@@ -3,6 +3,7 @@ import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
+import OpenAI from "openai";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -18,87 +19,45 @@ app.get('/', (req, res) => {
   res.send('Al Qods API is running 🚀');
 });
 
+const openai = new OpenAI({
+  apiKey: process.env.OPENROUTER_API_KEY,
+  baseURL: "https://openrouter.ai/api/v1"
+});
+
 app.post("/chat", async (req, res) => {
   try {
     const userMessage = req.body?.message || "مرحبا";
 
     console.log("USER:", userMessage);
 
-    const hfToken = process.env.HUGGINGFACE_API_KEY?.trim();
-    console.log("TOKEN:", hfToken);
-
-    if (!hfToken) {
-      return res.json({
-        reply: "ERROR: Missing HuggingFace API key"
-      });
-    }
-
-    const response = await fetch(
-      "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2",
-      {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${hfToken}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          inputs: `
+    const completion = await openai.chat.completions.create({
+      model: "meta-llama/llama-3-8b-instruct:free",
+      messages: [
+        {
+          role: "system",
+          content: `
 أنت محمد بائع مصري شاطر.
 
-- افهم العميل الأول
-- رد مختصر (سطرين)
+- رد مختصر
 - متكررّش كلامك
-- حاول تقفل البيع
+- افهم العميل الأول
+`
+        },
+        {
+          role: "user",
+          content: userMessage
+        }
+      ]
+    });
 
-سؤال العميل:
-${userMessage}
-          `
-        })
-      }
-    );
+    const reply = completion.choices[0].message.content;
 
-    const textResponse = await response.text();
-    console.log("RAW RESPONSE:", textResponse);
-
-    let data;
-    try {
-      data = JSON.parse(textResponse);
-    } catch (e) {
-      console.error("JSON PARSE ERROR:", e);
-      return res.json({
-        reply: "ERROR: HuggingFace returned invalid response"
-      });
-    }
-
-    console.log("HF RESPONSE:", data);
-
-    let reply = "";
-
-    if (Array.isArray(data)) {
-      reply = data[0]?.generated_text || "";
-    } else if (data?.generated_text) {
-      reply = data.generated_text;
-    }
-
-    // Mistral often includes the prompt in the response, let's clean it if possible
-    if (reply.includes("سؤال العميل:")) {
-      reply = reply.split("سؤال العميل:").pop().trim();
-      // Remove the user message part if it was echoed back
-      if (reply.startsWith(userMessage)) {
-        reply = reply.replace(userMessage, "").trim();
-      }
-    }
-
-    if (!reply) {
-      return res.json({
-        reply: "قولّي عايز إيه وأنا أظبطك 👌"
-      });
-    }
+    console.log("AI:", reply);
 
     res.json({ reply });
 
   } catch (err) {
-    console.error("HF ERROR:", err);
+    console.error("OPENROUTER ERROR:", err);
 
     res.json({
       reply: "ERROR: " + err.message
