@@ -60,10 +60,10 @@ app.post("/chat", async (req, res) => {
     });
 
   } catch (err) {
-    console.error("TOGETHER ERROR:", err);
+    console.error("TOGETHER ERROR FULL:", err);
 
-    res.json({
-      reply: "في مشكلة بسيطة دلوقتي 😅 جرب تاني"
+    return res.json({
+      reply: "ERROR: " + (err?.message || "unknown")
     });
   }
 });
