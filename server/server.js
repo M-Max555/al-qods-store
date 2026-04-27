@@ -41,7 +41,7 @@ app.post("/chat", async (req, res) => {
 - حاول تقفل البيع
 
 سؤال العميل:
-\${userMessage}
+${userMessage}
 `;
 
     const result = await model.generateContent(prompt);
@@ -68,4 +68,4 @@ app.post("/chat", async (req, res) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port \${PORT}`));
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
