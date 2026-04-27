@@ -44,26 +44,13 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
     setInput('');
     setIsLoading(true);
 
-    // Format messages for OpenAI
-    const apiMessages = [...messages, userMessage].map(m => {
-      if (m.imageUrl) {
-        return {
-          role: m.role,
-          content: [
-            { type: "text", text: m.content || "صورة مرفقة" },
-            { type: "image_url", image_url: { url: m.imageUrl } }
-          ]
-        };
-      }
-      return {
-        role: m.role,
-        content: m.content
-      };
-    });
+    // Send message to Gemini backend
+    const messageText = text.trim();
+
 
     try {
-      // Pass cart items to the service so AI knows what's in the cart
-      const response = await chatService.sendMessage(apiMessages as any, cartItems);
+      // Pass message and cart items to the service
+      const response = await chatService.sendMessage(messageText, cartItems);
       
       const assistantMessage = {
         id: (Date.now() + 1).toString(),

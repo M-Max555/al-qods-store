@@ -1,8 +1,12 @@
-const express = require('express');
-const cors = require('cors');
-const path = require('path');
-const dotenv = require('dotenv');
-const OpenAI = require("openai");
+import express from 'express';
+import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import dotenv from 'dotenv';
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 dotenv.config({ path: path.join(__dirname, '.env') });
 
@@ -15,72 +19,53 @@ app.get('/', (req, res) => {
   res.send('Al Qods API is running 🚀');
 });
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+
+const model = genAI.getGenerativeModel({
+  model: "gemini-1.5-flash"
 });
 
 app.post("/chat", async (req, res) => {
   try {
-    const userMessage =
-      req.body?.message ||
-      req.body?.messages?.[0]?.content ||
-      "مرحبا";
+    const userMessage = req.body?.message || "مرحبا";
 
     console.log("USER:", userMessage);
 
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content: `
-أنت "محمد" بائع مصري محترف في متجر أدوات منزلية.
+    const prompt = `
+أنت محمد بائع مصري شاطر في متجر أدوات منزلية.
 
-🎯 هدفك:
-- تفهم العميل الأول
-- ترشّح منتجات
-- تقفل البيع
+قواعد:
+- افهم العميل الأول
+- متكررّش نفس الرد
+- رد قصير (سطرين)
+- حاول تقفل البيع
 
-📌 قواعد:
-- متكررّش نفس الجملة
-- متبقاش روبوت
-- رد مختصر (سطرين max)
-- اسأل سؤال في الآخر
+سؤال العميل:
+\${userMessage}
+`;
 
-🔥 مثال:
-العميل: عاوز خلاط
-انت:
-"تمام يا فندم 👌 تحب حاجة في حدود كام؟
-عندي موديل ممتاز ومجرب"
-`
-        },
-        {
-          role: "user",
-          content: userMessage
-        }
-      ]
-    });
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
 
-    const reply = completion.choices?.[0]?.message?.content;
+    console.log("AI:", text);
 
-    console.log("AI:", reply);
-
-    if (!reply) {
+    if (!text) {
       return res.json({
-        reply: "تمام يا فندم 👌 قولّي محتاج إيه وأنا أظبطك"
+        reply: "في عرض جامد عندنا النهاردة 🔥 تحب أقولك عليه؟"
       });
     }
 
-    res.json({ reply });
+    res.json({ reply: text });
 
   } catch (err) {
-    console.error("OPENAI ERROR:", err);
+    console.error("GEMINI ERROR:", err);
 
     res.json({
-      reply: "في مشكلة بسيطة دلوقتي يا فندم 😅 جرب تاني"
+      reply: "في مشكلة بسيطة يا فندم 😅 جرب تاني"
     });
   }
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Server running on port \${PORT}`));
