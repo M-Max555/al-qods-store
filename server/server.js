@@ -48,7 +48,18 @@ ${userMessage}
       }
     );
 
-    const data = await response.json();
+    const textResponse = await response.text();
+    console.log("RAW RESPONSE:", textResponse);
+
+    let data;
+    try {
+      data = JSON.parse(textResponse);
+    } catch (e) {
+      console.error("JSON PARSE ERROR:", e);
+      return res.json({
+        reply: "ERROR: HuggingFace returned invalid response"
+      });
+    }
 
     console.log("HF RESPONSE:", data);
 
