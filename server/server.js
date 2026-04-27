@@ -59,10 +59,10 @@ ${userMessage}
     res.json({ reply: text });
 
   } catch (err) {
-    console.error("GEMINI ERROR:", err);
+    console.error("GEMINI ERROR FULL:", err);
 
-    res.json({
-      reply: "في مشكلة بسيطة يا فندم 😅 جرب تاني"
+    return res.json({
+      reply: "ERROR: " + (err?.message || "unknown")
     });
   }
 });
