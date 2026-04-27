@@ -3,8 +3,7 @@ import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import fetch from "node-fetch";
+import OpenAI from "openai";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -20,10 +19,9 @@ app.get('/', (req, res) => {
   res.send('Al Qods API is running 🚀');
 });
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-
-const model = genAI.getGenerativeModel({
-  model: "gemini-2.0-flash"
+const openai = new OpenAI({
+  apiKey: process.env.TOGETHER_API_KEY,
+  baseURL: "https://api.together.xyz/v1"
 });
 
 app.post("/chat", async (req, res) => {
@@ -32,56 +30,41 @@ app.post("/chat", async (req, res) => {
 
     console.log("USER:", userMessage);
 
-    const prompt = `
-أنت محمد بائع مصري شاطر في متجر أدوات منزلية.
+    const completion = await openai.chat.completions.create({
+      model: "meta-llama/Llama-3-8b-chat-hf",
+      messages: [
+        {
+          role: "system",
+          content: `
+أنت محمد بائع مصري شاطر.
 
-قواعد:
 - افهم العميل الأول
-- متكررّش نفس الرد
-- رد قصير (سطرين)
+- متكررّش كلامك
+- رد مختصر
 - حاول تقفل البيع
-
-سؤال العميل:
-${userMessage}
-`;
-
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
-
-    console.log("AI:", text);
-
-    if (!text) {
-      return res.json({
-        reply: "في عرض جامد عندنا النهاردة 🔥 تحب أقولك عليه؟"
-      });
-    }
-
-    res.json({ reply: text });
-
-  } catch (err) {
-    console.error("GEMINI ERROR FULL:", err);
-
-    return res.json({
-      reply: "ERROR: " + (err?.message || "unknown")
+`
+        },
+        {
+          role: "user",
+          content: userMessage
+        }
+      ]
     });
-  }
-});
 
-app.get("/models", async (req, res) => {
-  try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models?key=${process.env.GEMINI_API_KEY}`
-    );
+    const reply = completion.choices?.[0]?.message?.content;
 
-    const data = await response.json();
+    console.log("AI:", reply);
 
-    console.log("MODELS:", data);
+    res.json({
+      reply: reply || "قولّي عايز إيه وأنا أظبطك 👌"
+    });
 
-    res.json(data);
   } catch (err) {
-    console.error(err);
-    res.send("error");
+    console.error("TOGETHER ERROR:", err);
+
+    res.json({
+      reply: "في مشكلة بسيطة دلوقتي 😅 جرب تاني"
+    });
   }
 });
 
