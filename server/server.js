@@ -24,12 +24,21 @@ app.post("/chat", async (req, res) => {
 
     console.log("USER:", userMessage);
 
+    const hfToken = process.env.HUGGINGFACE_API_KEY?.trim();
+    console.log("TOKEN:", hfToken);
+
+    if (!hfToken) {
+      return res.json({
+        reply: "ERROR: Missing HuggingFace API key"
+      });
+    }
+
     const response = await fetch(
       "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2",
       {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${process.env.HUGGINGFACE_API_KEY}`,
+          "Authorization": `Bearer ${hfToken}`,
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
