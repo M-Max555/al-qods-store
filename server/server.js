@@ -31,7 +31,7 @@ app.post("/chat", async (req, res) => {
     console.log("USER:", userMessage);
 
     const completion = await openai.chat.completions.create({
-      model: "meta-llama/llama-3-8b-instruct:free",
+      model: "deepseek/deepseek-chat",
       messages: [
         {
           role: "system",
