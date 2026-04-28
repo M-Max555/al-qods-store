@@ -99,14 +99,14 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
       {/* Header */}
       <div className="bg-zinc-900 text-white p-5 flex items-center justify-between shadow-lg z-10">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center shadow-inner backdrop-blur-md">
-            <Bot size={28} className="text-red-500" />
+          <div className="w-12 h-12 rounded-2xl overflow-hidden shadow-inner border border-white/20">
+            <img src="/assets/mohamed-avatar.png" alt="محمد" className="w-full h-full object-cover" />
           </div>
           <div>
-            <h3 className="font-black text-xl leading-tight">محمد البائع الذكي</h3>
+            <h3 className="font-black text-xl leading-tight">محمد مساعدك الشخصي</h3>
             <div className="flex items-center gap-1.5 mt-1">
               <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-              <p className="text-zinc-400 text-xs font-bold uppercase tracking-widest">Online & Ready to Help</p>
+              <p className="text-zinc-400 text-xs font-bold uppercase tracking-widest">متصل الآن لمساعدتك</p>
             </div>
           </div>
         </div>
@@ -126,8 +126,8 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
             className={`flex ${msg.role === 'user' ? 'justify-start' : 'justify-end'} gap-3 animate-fade-in`}
           >
             {msg.role === 'assistant' && (
-              <div className="w-10 h-10 rounded-2xl bg-white border border-gray-100 text-red-600 flex items-center justify-center flex-shrink-0 mt-1 shadow-sm">
-                <Bot size={20} />
+              <div className="w-10 h-10 rounded-2xl overflow-hidden border border-gray-100 flex-shrink-0 mt-1 shadow-sm">
+                <img src="/assets/mohamed-avatar.png" alt="محمد" className="w-full h-full object-cover" />
               </div>
             )}
             
@@ -197,8 +197,8 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
         
         {isLoading && (
           <div className="flex justify-end gap-3 animate-fade-in">
-            <div className="w-10 h-10 rounded-2xl bg-white border border-gray-100 text-red-600 flex items-center justify-center flex-shrink-0 mt-1 shadow-sm">
-              <Bot size={20} />
+            <div className="w-10 h-10 rounded-2xl overflow-hidden border border-gray-100 flex-shrink-0 mt-1 shadow-sm">
+              <img src="/assets/mohamed-avatar.png" alt="محمد" className="w-full h-full object-cover" />
             </div>
             <div className="px-5 py-3.5 rounded-3xl bg-white border border-gray-100 shadow-sm rounded-tl-none flex items-center gap-3">
               <div className="flex gap-1">

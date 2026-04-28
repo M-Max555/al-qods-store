@@ -37,7 +37,7 @@ export const useChatStore = create<ChatState>()(
         {
           id: '1',
           role: 'assistant',
-          content: 'أنا محمد 👋 من معرض القدس، أقدر أساعدك تختار أفضل حاجة ليك'
+          content: 'أنا محمد مساعدك الشخصي 👋 من معرض القدس، أقدر أساعدك تختار أفضل حاجة ليك'
         }
       ],
       isOpen: false,
