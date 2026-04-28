@@ -102,9 +102,9 @@ export default function Footer() {
             <MapPin size={14} className="text-red-600 flex-shrink-0" />
             <span>أوسيم، الجيزة، مصر</span>
           </div>
-          <a href="tel:01143033292" className="flex items-center gap-2 text-zinc-500 hover:text-red-600 transition-colors font-body-sm">
+          <a href="tel:01010959687" className="flex items-center gap-2 text-zinc-500 hover:text-red-600 transition-colors font-body-sm">
             <Phone size={14} className="text-red-600 flex-shrink-0" />
-            <span>01143033292</span>
+            <span>01010959687</span>
           </a>
           {/* Email REMOVED per Req #6C */}
         </div>

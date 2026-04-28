@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { ArrowUp, Phone } from 'lucide-react';
 
 const WHATSAPP_NUMBER = '201010959687';
-const PHONE_NUMBER = '19000';
+const PHONE_NUMBER = '01010959687';
 const WHATSAPP_MESSAGE = 'مرحباً، أود الاستفسار عن منتجات القدس للإلكترونيات';
 
 export default function FloatingButtons() {
