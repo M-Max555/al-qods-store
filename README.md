@@ -15,7 +15,7 @@
 - **State Management**: Zustand.
 - **Backend**: Node.js, Express (AI Chatbot Service).
 - **Database**: Firebase (Firestore, Auth, Storage).
-- **AI**: Google Gemini API.
+- **AI**: OpenRouter API.
 
 ## 📦 التشغيل المحلي
 1. قم بتحميل المستودع: `git clone https://github.com/M-Max555/al-qods-store.git`

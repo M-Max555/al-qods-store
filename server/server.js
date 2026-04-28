@@ -4,9 +4,6 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import OpenAI from "openai";
-import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, getDocs, query, orderBy } from 'firebase/firestore';
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -16,71 +13,63 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Firebase Setup
-const firebaseConfig = {
-  apiKey: process.env.FIREBASE_API_KEY,
-  authDomain: process.env.FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.FIREBASE_PROJECT_ID,
-  storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.FIREBASE_APP_ID,
-  measurementId: process.env.FIREBASE_MEASUREMENT_ID
-};
-
-const firebaseApp = initializeApp(firebaseConfig);
-const db = getFirestore(firebaseApp);
-
-async function getProductsFromDatabase() {
-  try {
-    const q = query(collection(db, 'products'));
-    const snapshot = await getDocs(q);
-    const products = snapshot.docs.map(doc => {
-      const data = doc.data();
-      return {
-        name: data.nameAr || data.name,
-        price: data.finalPrice || data.price,
-        category: data.categoryAr || data.category,
-        description: data.descriptionAr || data.description,
-        features: data.features || "",
-        stock: data.stock || "متوفر"
-      };
-    });
-    console.log(`✅ Success: Fetched ${products.length} products for AI knowledge`);
-    return products;
-  } catch (error) {
-    console.error('❌ Error fetching products from Firebase:', error);
-    return [];
-  }
-}
-
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: process.env.OPENROUTER_API_KEY,
+  baseURL: "https://openrouter.ai/api/v1"
 });
 
 app.post("/chat", async (req, res) => {
   try {
     const userMessage = req.body?.message || "";
 
-    const products = await getProductsFromDatabase();
+    // 🔥 Manual products (IMPORTANT)
+    const products = [
+      { name: "ثلاجة بابين 14 قدم", price: 20699, category: "ثلاجات" },
+      { name: "ثلاجة ميني 6 قدم", price: 8999, category: "ثلاجات" },
+      { name: "خلاط تورنيدو", price: 450, category: "خلاطات" }
+    ];
 
     const systemPrompt = `
 أنت محمد بائع محترف في معرض القدس.
 
-🚨 مهم:
+🚨 قواعد صارمة:
 
-- استخدم المنتجات دي فقط:
+- المنتجات الوحيدة المتاحة:
 ${JSON.stringify(products)}
-
-- ممنوع اختراع منتجات
-- لو العميل قال "ثلاجة" → رشّح من القائمة
 
 ----------------------------------------
 
-🎯 البيع:
+❌ ممنوع:
+- اختراع منتجات
+- قول "مفيش" لو المنتج موجود
+- كلام عام
 
-- رد مباشر
-- رشّح منتج
-- اسأل سؤال يكمل البيع
+----------------------------------------
+
+🎯 المطلوب:
+
+1. لو العميل قال اسم منتج (زي: ثلاجة)
+→ دور في القائمة
+→ رشّح منتج فورًا
+
+2. لازم تذكر:
+- الاسم
+- السعر
+
+3. ردك يكون:
+- مباشر
+- ذكي
+- فيه سؤال يكمل البيع
+
+----------------------------------------
+
+🎯 مثال:
+
+العميل: عاوز ثلاجة
+
+ردك:
+"في ثلاجة بابين 14 قدم بـ 20699 جنيه 👌  
+تحب حجم كبير ولا حاجة صغيرة؟"
 
 ----------------------------------------
 
@@ -97,7 +86,8 @@ ${JSON.stringify(products)}
 `;
 
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: "deepseek/deepseek-chat",
+      temperature: 0.2,
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userMessage }
@@ -109,10 +99,10 @@ ${JSON.stringify(products)}
     res.json({ reply });
 
   } catch (err) {
-    console.error("OPENAI ERROR:", err);
+    console.error("AI ERROR:", err);
 
     res.json({
-      reply: "في مشكلة بسيطة 😅 جرب تاني"
+      reply: "ERROR: " + err.message
     });
   }
 });

@@ -44,7 +44,7 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
     setInput('');
     setIsLoading(true);
 
-    // Send message to Gemini backend
+    // Send message to OpenRouter backend
     const messageText = text.trim();
 
 
