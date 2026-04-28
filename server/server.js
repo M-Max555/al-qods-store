@@ -127,7 +127,7 @@ ${JSON.stringify(products)}
 `;
 
     const completion = await openai.chat.completions.create({
-      model: "openchat/openchat-7b",
+      model: "google/gemma-7b-it",
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userMessage }
