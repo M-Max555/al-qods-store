@@ -21,7 +21,7 @@ try {
     if (!process.env.FIREBASE_SERVICE_ACCOUNT) {
       throw new Error("MISSING FIREBASE_SERVICE_ACCOUNT in .env");
     }
-    
+
     admin.initializeApp({
       credential: admin.credential.cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT))
     });
@@ -66,7 +66,7 @@ app.post("/chat", async (req, res) => {
   try {
     const { message: userMessage, imageUrl, cartItems } = req.body;
     const products = await getProductsFromDatabase();
-    
+
     if (!products || products.length === 0) {
       return res.json({ reply: "حالياً مفيش منتجات متاحة، جرب تاني بعد شوية 👌" });
     }
@@ -108,24 +108,12 @@ https://wa.me/201021481138?text=طلب جديد...
 [METADATA]{"product":{"name":"ثلاجة 14 قدم","price":20699,"image":"url"}, "whatsapp": null}"
 `;
 
-    // Prepare content for vision model support
-    const userContent = [];
-    if (userMessage) {
-      userContent.push({ type: "text", text: userMessage });
-    }
-    if (imageUrl) {
-      userContent.push({ 
-        type: "image_url", 
-        image_url: { url: imageUrl } 
-      });
-    }
-
     const completion = await openai.chat.completions.create({
-      model: imageUrl ? "google/gemini-flash-1.5" : "deepseek/deepseek-chat",
+      model: "deepseek/deepseek-chat",
       temperature: 0.3,
       messages: [
         { role: "system", content: systemPrompt },
-        { role: "user", content: imageUrl ? userContent : userMessage }
+        { role: "user", content: userMessage }
       ]
     });
 
