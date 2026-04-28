@@ -158,7 +158,7 @@ export default function OfferFormPage() {
 
   const filteredProducts = products.filter(p => 
     p.nameAr.toLowerCase().includes(searchProduct.toLowerCase()) || 
-    p.categoryAr.includes(searchProduct)
+    p.categoryAr?.includes(searchProduct)
   );
 
   if (isLoading) {

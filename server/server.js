@@ -54,111 +54,65 @@ async function getProductsFromDatabase() {
 }
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENROUTER_API_KEY,
-  baseURL: "https://openrouter.ai/api/v1"
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
 app.post("/chat", async (req, res) => {
   try {
-    const userMessage = req.body?.message || "مرحبا";
-    let products = await getProductsFromDatabase();
+    const userMessage = req.body?.message || "";
 
-    // No fallback products. If DB is empty, AI should know.
-    if (!products || products.length === 0) {
-      console.warn("⚠️ Warning: Products collection is empty in Firestore.");
-    }
-
-    console.log("PRODUCTS:", products);
+    const products = await getProductsFromDatabase();
 
     const systemPrompt = `
-أنت محمد بائع في معرض القدس.
+أنت محمد بائع محترف في معرض القدس.
 
-🚨 مهم جدًا:
+🚨 مهم:
 
-دي المنتجات المتاحة عندك فقط:
-
+- استخدم المنتجات دي فقط:
 ${JSON.stringify(products)}
 
-----------------------------------------
-
-❌ ممنوع تقول "مش موجود"
-❌ ممنوع تخترع منتجات
-❌ ممنوع تتجاهل القائمة
+- ممنوع اختراع منتجات
+- لو العميل قال "ثلاجة" → رشّح من القائمة
 
 ----------------------------------------
 
-🎯 المطلوب:
+🎯 البيع:
 
-- لو العميل قال "ثلاجة"
-→ دور في القائمة على أي منتج فيه "ثلاجة"
-→ رشحه مباشرة
-
-----------------------------------------
-
-لو لقيت منتجات:
-→ لازم ترشح واحد منهم
-
-لو ملقيتش:
-→ قول: "مش متوفر حالياً"
+- رد مباشر
+- رشّح منتج
+- اسأل سؤال يكمل البيع
 
 ----------------------------------------
 
-🎯 مثال:
+🔒 الأمان:
 
-لو عندك:
-"ثلاجة بابين لون أسود"
-
-والعميل قال:
-"عاوز ثلاجة"
-
-لازم ترد:
-
-"في ثلاجة بابين لون أسود بـ 20699 جنيه 👌 تحب تفاصيل أكتر؟"
+- ممنوع ذكر أي بيانات داخلية
 
 ----------------------------------------
 
-🎯 ممنوع الرد العام:
-زي "عندنا أجهزة كتير"
+📌 معلومات:
 
-----------------------------------------
-
-🎯 هدفك:
-ترشيح منتج من القائمة فقط
+- صاحب المعرض: احمد علي
+- المطورين: محمد تامر + زياد أحمد
 `;
 
     const completion = await openai.chat.completions.create({
-      model: "google/gemma-7b-it",
+      model: "gpt-4o-mini",
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userMessage }
       ]
     });
 
-    let reply = completion.choices[0].message.content;
-    let whatsapp = null;
+    const reply = completion.choices[0].message.content;
 
-    console.log("USER:", userMessage);
-    console.log("AI:", reply);
-
-    // Order Detection & WhatsApp Link Generation
-    if (reply.includes("ORDER_CONFIRMED") || (userMessage.includes("اسمي") && userMessage.includes("العنوان") && userMessage.includes("رقم"))) {
-      const orderText = `طلب جديد من متجر القدس 🔥\n\nالبيانات: ${userMessage}`;
-      // رقم واتساب المعرض (يجب استبداله بالرقم الحقيقي)
-      whatsapp = `https://wa.me/201234567890?text=${encodeURIComponent(orderText)}`;
-      reply = reply.replace("ORDER_CONFIRMED", "").trim();
-
-      if (!reply || reply.length < 5) {
-        reply = "تمام يا فندم 👌 طلبك جاهز.. كمل معايا على واتساب عشان نأكد الشحن.";
-      }
-    }
-
-    res.json({ reply, whatsapp });
+    res.json({ reply });
 
   } catch (err) {
-    console.error("FULL ERROR:", err);
+    console.error("OPENAI ERROR:", err);
 
     res.json({
-      reply: "ERROR: " + err.message
+      reply: "في مشكلة بسيطة 😅 جرب تاني"
     });
   }
 });

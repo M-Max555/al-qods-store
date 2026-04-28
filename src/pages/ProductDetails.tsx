@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { 
-  Heart, ShoppingCart, Star, Check, ArrowRight, 
+  Heart, ShoppingCart, Star, Check, 
   ShieldCheck, Truck, RefreshCcw, Loader2 
 } from 'lucide-react';
 import { productService } from '../firebase/services/productService';

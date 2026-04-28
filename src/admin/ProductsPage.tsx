@@ -4,7 +4,7 @@ import { productService } from '../firebase/services/productService';
 import type { Product } from '../types';
 import { formatPrice } from '../utils/format';
 import toast from 'react-hot-toast';
-import { PlusCircle, Search, Edit2, Trash2, Filter } from 'lucide-react';
+import { PlusCircle, Search, Edit2, Trash2 } from 'lucide-react';
 import { CATEGORIES, getCategoryLabel } from '../constants/categories';
 
 const CATEGORY_TABS = [

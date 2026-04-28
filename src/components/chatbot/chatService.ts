@@ -15,9 +15,8 @@ export const chatService = {
       }
       const data = await response.json();
       return { 
-        content: data.reply || "تمام يا فندم 👌 قولّي محتاج إيه وأنا أظبطك", 
-        products: [],
-        whatsapp: data.whatsapp 
+        content: data.reply || "في مشكلة بسيطة 😅 جرب تاني", 
+        products: []
       };
     } catch (error) {
       console.error('Chat Service Error:', error);

@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Tag, Clock, Zap, Percent } from 'lucide-react';
+import { Tag, Clock, Percent } from 'lucide-react';
 import { useOfferStore } from '../store/offerStore';
 import { useProductStore } from '../store/productStore';
 import ProductCard from '../components/ui/ProductCard';

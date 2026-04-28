@@ -80,6 +80,9 @@ export default function AddProductPage() {
         finalPrice,
         rating: 5,
         reviewCount: 0,
+        ratingAverage: 5,
+        ratingCount: 0,
+        reviews: [],
         tags: [],
         createdAt: new Date().toISOString()
       });
