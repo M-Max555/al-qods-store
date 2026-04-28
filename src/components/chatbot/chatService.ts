@@ -14,7 +14,11 @@ export const chatService = {
         throw new Error('Network response was not ok');
       }
       const data = await response.json();
-      return { content: data.reply || "تمام يا فندم 👌 قولّي محتاج إيه وأنا أظبطك", products: [] };
+      return { 
+        content: data.reply || "تمام يا فندم 👌 قولّي محتاج إيه وأنا أظبطك", 
+        products: [],
+        whatsapp: data.whatsapp 
+      };
     } catch (error) {
       console.error('Chat Service Error:', error);
       return { content: "عذراً، الخدمة غير متاحة حالياً بسبب خطأ في الاتصال بالسيرفر. يرجى المحاولة لاحقاً.", products: [] };

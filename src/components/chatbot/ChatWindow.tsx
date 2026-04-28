@@ -52,6 +52,10 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
       // Pass message and cart items to the service
       const response = await chatService.sendMessage(messageText, cartItems);
       
+      if (response.whatsapp) {
+        window.open(response.whatsapp, '_blank');
+      }
+
       const assistantMessage = {
         id: (Date.now() + 1).toString(),
         role: 'assistant' as const,
