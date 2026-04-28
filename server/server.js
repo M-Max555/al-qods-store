@@ -4,8 +4,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import OpenAI from "openai";
-import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, getDocs } from 'firebase/firestore';
+import admin from "firebase-admin";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -16,21 +15,23 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Firebase Setup with Trimming to avoid "Invalid resource field value"
-const firebaseConfig = {
-  apiKey: (process.env.FIREBASE_API_KEY || "").trim(),
-  authDomain: (process.env.FIREBASE_AUTH_DOMAIN || "").trim(),
-  projectId: (process.env.FIREBASE_PROJECT_ID || "").trim(),
-  storageBucket: (process.env.FIREBASE_STORAGE_BUCKET || "").trim(),
-  messagingSenderId: (process.env.FIREBASE_MESSAGING_SENDER_ID || "").trim(),
-  appId: (process.env.FIREBASE_APP_ID || "").trim(),
-  measurementId: (process.env.FIREBASE_MEASUREMENT_ID || "").trim()
-};
+// PART 2: SETUP FIREBASE ADMIN
+try {
+  if (!admin.apps.length) {
+    if (!process.env.FIREBASE_SERVICE_ACCOUNT) {
+      throw new Error("MISSING FIREBASE_SERVICE_ACCOUNT in .env");
+    }
+    
+    admin.initializeApp({
+      credential: admin.credential.cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT))
+    });
+    console.log("✅ Firebase Admin initialized successfully");
+  }
+} catch (error) {
+  console.error("❌ Firebase Admin Init Error:", error.message);
+}
 
-console.log("🔥 Firebase Project ID:", firebaseConfig.projectId);
-
-const firebaseApp = initializeApp(firebaseConfig);
-const db = getFirestore(firebaseApp);
+const db = admin.firestore();
 
 // OpenRouter / OpenAI Setup
 const openai = new OpenAI({
@@ -38,17 +39,30 @@ const openai = new OpenAI({
   baseURL: "https://openrouter.ai/api/v1"
 });
 
-// PART 1: FETCH PRODUCTS FROM FIRESTORE
+// PART 3: FETCH PRODUCTS
 async function getProductsFromDatabase() {
   try {
-    const snapshot = await getDocs(collection(db, "products"));
-    return snapshot.docs.map(doc => ({
-      id: doc.id,
-      name: doc.data().nameAr || doc.data().name,
-      price: doc.data().finalPrice || doc.data().price,
-      category: doc.data().categoryAr || doc.data().category,
-      description: doc.data().descriptionAr || doc.data().description || ""
-    }));
+    console.log("🔍 Fetching products from Firestore (Admin SDK)...");
+    const snapshot = await db.collection("products").get();
+
+    if (snapshot.empty) {
+      console.log("⚠️ NO PRODUCTS FOUND IN FIRESTORE");
+      return [];
+    }
+
+    const products = snapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        name: data.nameAr || data.name,
+        price: data.finalPrice || data.price,
+        category: data.categoryAr || data.category,
+        description: data.descriptionAr || data.description || ""
+      };
+    });
+
+    console.log(`✅ TOTAL PRODUCTS FETCHED: ${products.length}`);
+    return products;
   } catch (error) {
     console.error("❌ Error fetching from Firestore:", error);
     return [];
@@ -59,20 +73,19 @@ app.post("/chat", async (req, res) => {
   try {
     const userMessage = req.body?.message || "";
 
-    // PART 2: USE PRODUCTS IN /chat
     const products = await getProductsFromDatabase();
     
-    // PART 6: FINAL VALIDATION
+    // PART 4 & 5: DEBUG & VALIDATION
+    console.log("📊 TOTAL PRODUCTS FOR AI:", products.length);
+
     if (!products || products.length === 0) {
       return res.json({
         reply: "حالياً مفيش منتجات متاحة، جرب تاني بعد شوية 👌"
       });
     }
 
-    // PART 4: FILTER PRODUCTS BEFORE SENDING (Performance & Token limits)
     const filteredProducts = products.slice(0, 20);
 
-    // PART 3: SYSTEM PROMPT (STRICT CONTROL)
     const systemPrompt = `
 أنت محمد، بائع محترف في معرض القدس.
 
@@ -148,7 +161,6 @@ ${JSON.stringify(filteredProducts)}
 ترشيح منتج حقيقي + محاولة بيع
 `;
 
-    // PART 5: MODEL SETTINGS
     const completion = await openai.chat.completions.create({
       model: "deepseek/deepseek-chat",
       temperature: 0.3,
