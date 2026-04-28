@@ -127,7 +127,7 @@ ${JSON.stringify(products)}
 `;
 
     const completion = await openai.chat.completions.create({
-      model: "mistralai/mistral-7b-instruct",
+      model: "openchat/openchat-7b",
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userMessage }
@@ -155,9 +155,10 @@ ${JSON.stringify(products)}
     res.json({ reply, whatsapp });
 
   } catch (err) {
-    console.error("AI ERROR:", err);
+    console.error("FULL ERROR:", err);
+
     res.json({
-      reply: "في مشكلة بسيطة في التواصل دلوقتي 😅 جرب تاني كمان شوية."
+      reply: "ERROR: " + err.message
     });
   }
 });
