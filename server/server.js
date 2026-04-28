@@ -32,16 +32,21 @@ const db = getFirestore(firebaseApp);
 
 async function getProductsFromDatabase() {
   try {
-    const q = query(collection(db, 'products'), orderBy('createdAt', 'desc'));
+    const q = query(collection(db, 'products'));
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({
+    const products = snapshot.docs.map(doc => ({
       name: doc.data().nameAr || doc.data().name,
       price: doc.data().finalPrice || doc.data().price,
       category: doc.data().categoryAr || doc.data().category,
       description: doc.data().descriptionAr || doc.data().description
     }));
+    console.log(`✅ Success: Fetched ${products.length} products from Firebase`);
+    if (products.length > 0) {
+      console.log("Sample Product:", products[0]);
+    }
+    return products;
   } catch (error) {
-    console.error('Error fetching products from Firebase:', error);
+    console.error('❌ Error fetching products from Firebase:', error);
     return [];
   }
 }
