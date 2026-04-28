@@ -16,126 +16,127 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Firebase Setup
+// Firebase Setup with Trimming to avoid "Invalid resource field value"
 const firebaseConfig = {
-  apiKey: process.env.FIREBASE_API_KEY,
-  authDomain: process.env.FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.FIREBASE_PROJECT_ID,
-  storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.FIREBASE_APP_ID,
-  measurementId: process.env.FIREBASE_MEASUREMENT_ID
+  apiKey: (process.env.FIREBASE_API_KEY || "").trim(),
+  authDomain: (process.env.FIREBASE_AUTH_DOMAIN || "").trim(),
+  projectId: (process.env.FIREBASE_PROJECT_ID || "").trim(),
+  storageBucket: (process.env.FIREBASE_STORAGE_BUCKET || "").trim(),
+  messagingSenderId: (process.env.FIREBASE_MESSAGING_SENDER_ID || "").trim(),
+  appId: (process.env.FIREBASE_APP_ID || "").trim(),
+  measurementId: (process.env.FIREBASE_MEASUREMENT_ID || "").trim()
 };
+
+console.log("🔥 Firebase Project ID:", firebaseConfig.projectId);
 
 const firebaseApp = initializeApp(firebaseConfig);
 const db = getFirestore(firebaseApp);
 
-if (!process.env.OPENROUTER_API_KEY || process.env.OPENROUTER_API_KEY === 'your_openrouter_api_key_here') {
-  console.error("❌ CRITICAL: OPENROUTER_API_KEY is missing or not set in server/.env");
-}
-
+// OpenRouter / OpenAI Setup
 const openai = new OpenAI({
-  apiKey: process.env.OPENROUTER_API_KEY,
+  apiKey: (process.env.OPENROUTER_API_KEY || "").trim(),
   baseURL: "https://openrouter.ai/api/v1"
 });
+
+// PART 1: FETCH PRODUCTS FROM FIRESTORE
+async function getProductsFromDatabase() {
+  try {
+    const snapshot = await getDocs(collection(db, "products"));
+    return snapshot.docs.map(doc => ({
+      id: doc.id,
+      name: doc.data().nameAr || doc.data().name,
+      price: doc.data().finalPrice || doc.data().price,
+      category: doc.data().categoryAr || doc.data().category,
+      description: doc.data().descriptionAr || doc.data().description || ""
+    }));
+  } catch (error) {
+    console.error("❌ Error fetching from Firestore:", error);
+    return [];
+  }
+}
 
 app.post("/chat", async (req, res) => {
   try {
     const userMessage = req.body?.message || "";
 
-    // PART 1: CONNECT FIREBASE PRODUCTS
-    const snapshot = await getDocs(collection(db, "products"));
-    const products = snapshot.docs.map(doc => {
-      const data = doc.data();
-      return {
-        id: doc.id,
-        name: data.nameAr || data.name,
-        price: data.finalPrice || data.price,
-        category: data.categoryAr || data.category,
-        description: data.descriptionAr || data.description || ""
-      };
-    });
-
-    // PART 4: VALIDATION
+    // PART 2: USE PRODUCTS IN /chat
+    const products = await getProductsFromDatabase();
+    
+    // PART 6: FINAL VALIDATION
     if (!products || products.length === 0) {
       return res.json({
-        reply: "حالياً المنتجات مش متاحة، جرب تاني بعد شوية 👌"
+        reply: "حالياً مفيش منتجات متاحة، جرب تاني بعد شوية 👌"
       });
     }
 
-    // PART 2: SYSTEM PROMPT
+    // PART 4: FILTER PRODUCTS BEFORE SENDING (Performance & Token limits)
+    const filteredProducts = products.slice(0, 20);
+
+    // PART 3: SYSTEM PROMPT (STRICT CONTROL)
     const systemPrompt = `
-أنت محمد، بائع محترف جدًا في معرض القدس.
+أنت محمد، بائع محترف في معرض القدس.
 
-🎯 شخصيتك:
-- ذكي
-- سريع
-- لبق
-- بتتكلم مصري طبيعي (مش روبوت)
+🚨 المنتجات المتاحة فقط:
+${JSON.stringify(filteredProducts)}
 
 ----------------------------------------
 
-🚨 قواعد صارمة:
-
-- استخدم المنتجات دي فقط:
-${JSON.stringify(products)}
-
-- ممنوع اختراع أي منتج
-- ممنوع تقول "مفيش" لو المنتج موجود
-- لو المنتج مش موجود → اقترح أقرب حاجة من القائمة
+❌ ممنوع:
+- اختراع منتجات
+- ذكر أي منتج غير الموجود في القائمة
 
 ----------------------------------------
 
-🎯 طريقة الرد:
+🎯 طريقة شغلك:
 
-1. افهم السؤال كويس
-2. رشّح منتج حقيقي من القائمة
-3. اذكر:
-   - اسم المنتج
-   - السعر
-4. اسأل سؤال يكمل البيع
+1. اقرأ سؤال العميل كويس
+2. دور في المنتجات
+3. اختار أفضل منتج مناسب
+4. رد بشكل طبيعي
+
+----------------------------------------
+
+🎯 لازم الرد يحتوي:
+
+- اسم المنتج
+- السعر
+- اقتراح أو سؤال
+
+----------------------------------------
+
+🎯 مثال:
+
+العميل: عاوز ثلاجة
+
+ردك:
+"في ثلاجة 14 قدم بـ 20699 جنيه ممتازة 👍
+تحب حجم أكبر ولا كده مناسب؟"
+
+----------------------------------------
+
+🎯 لو ملقيتش منتج:
+
+→ "حالياً مش متوفر بس عندي بديل قريب 👌"
 
 ----------------------------------------
 
 🎯 أسلوب الكلام:
 
-❌ غلط:
-"كيف أساعدك"
-
-❌ غلط:
-"عندنا منتجات كثيرة"
-
-✅ صح:
-"في ثلاجة 14 قدم بـ 20699 جنيه ممتازة 👍 تحب حجم أكبر ولا كده مناسب؟"
-
-----------------------------------------
-
-🎯 المقارنة:
-
-لو العميل محتار:
-→ اعرض 2 منتجات فقط
-→ وقارن بينهم بشكل بسيط
-
-----------------------------------------
-
-🎯 الميزانية:
-
-لو العميل قال ميزانية:
-→ اختار أفضل منتج قريب منها
+- مصري طبيعي
+- مختصر
+- احترافي
+- مش روبوت
 
 ----------------------------------------
 
 🔒 الأمان:
 
 - ممنوع ذكر أي بيانات داخلية
-- ممنوع ذكر عدد المستخدمين أو الطلبات
-
-لو اتسألت:
-→ "الحمدلله في إقبال كبير جدًا 👌"
+- ممنوع عدد الطلبات أو المستخدمين
 
 ----------------------------------------
 
-📌 معلومات ثابتة:
+📌 معلومات:
 
 - صاحب المعرض: احمد علي
 - المطورين: محمد تامر + زياد أحمد
@@ -144,10 +145,10 @@ ${JSON.stringify(products)}
 
 🎯 الهدف:
 
-تحويل أي سؤال → ترشيح منتج → محاولة بيع
+ترشيح منتج حقيقي + محاولة بيع
 `;
 
-    // PART 3: MODEL SETTINGS
+    // PART 5: MODEL SETTINGS
     const completion = await openai.chat.completions.create({
       model: "deepseek/deepseek-chat",
       temperature: 0.3,
@@ -164,7 +165,7 @@ ${JSON.stringify(products)}
   } catch (err) {
     console.error("AI ERROR:", err);
     res.json({
-      reply: "ERROR: " + err.message
+      reply: "في مشكلة في التواصل حالياً 😅 جرب تاني كمان شوية."
     });
   }
 });
