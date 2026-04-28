@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, ChevronLeft, ChevronRight, Zap } from 'lucide-react';
 import { useProductStore } from '../store/productStore';
-import { useOfferStore } from '../store/offerStore';
 import ProductCard from '../components/ui/ProductCard';
 import { ProductGridSkeleton } from '../components/ui/LoadingSpinner';
 
@@ -61,7 +60,6 @@ export default function Home() {
   const [activeBanner, setActiveBanner] = useState(0);
   const navigate = useNavigate();
   const { products, isLoading, fetchProducts, clearFilters } = useProductStore();
-  const { offers } = useOfferStore();
 
   useEffect(() => {
     clearFilters();
@@ -136,54 +134,57 @@ export default function Home() {
         </button>
       </section>
 
-      {/* ─── Req #2: Featured Offers — dynamic from DB ─────────────── */}
-      {offers.length > 0 ? (
-        <section className="py-12 px-4 sm:px-6 max-w-7xl mx-auto">
-          <div className="flex justify-between items-end mb-8">
-            <h2 className="font-headline-lg border-r-4 border-red-600 pr-4">🔥 عروض خاصة</h2>
-            <Link to="/offers" className="text-red-600 font-label-md hover:underline">عرض الكل</Link>
+      {/* ─── Featured Categories — High-end grid ─────────────── */}
+      <section className="py-16 px-4 sm:px-6 max-w-7xl mx-auto">
+        <div className="flex justify-between items-end mb-10">
+          <div>
+            <h2 className="font-headline-lg border-r-4 border-red-600 pr-4 mb-2">أقوى الأقسام</h2>
+            <p className="text-gray-500 mr-5 text-sm">تصفح أفضل المنتجات المختارة لك</p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {offers.slice(0, 3).map((offer) => (
-              <Link key={offer.id} to="/offers" className="relative rounded-xl overflow-hidden h-64 group cursor-pointer block bg-zinc-900">
-                <img
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-80"
-                  alt={offer.title}
-                  src={offer.image || 'https://images.unsplash.com/photo-1626806787461-102c1bfaaea1?w=600&q=80'}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent flex flex-col justify-end p-6">
-                  <span className="bg-red-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg w-fit mb-3 shadow-lg shadow-red-500/30">
-                    خصم {offer.discountPercentage}%
-                  </span>
-                  <h3 className="text-white font-headline-md text-xl mb-1">{offer.title}</h3>
-                  <p className="text-gray-300 text-sm line-clamp-2">{offer.description}</p>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </section>
-      ) : (
-        <section className="py-12 px-4 sm:px-6 max-w-7xl mx-auto">
-          <div className="flex justify-between items-end mb-8">
-            <h2 className="font-headline-lg border-r-4 border-red-600 pr-4">أقوى العروض الحصرية</h2>
-            <Link to="/products?filter=sale" className="text-red-600 font-label-md hover:underline">عرض الكل</Link>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Link to="/products?category=appliances" className="relative rounded-xl overflow-hidden h-64 group cursor-pointer block">
-              <img className="w-full h-full object-cover" alt="الأجهزة" src="https://images.unsplash.com/photo-1626806787461-102c1bfaaea1?w=600&q=80" />
-              <div className="absolute inset-0 bg-black/40 flex items-center justify-center"><h3 className="text-white font-bold">الأجهزة الكهربائية</h3></div>
-            </Link>
-            <Link to="/products?category=kitchen" className="relative rounded-xl overflow-hidden h-64 group cursor-pointer block">
-              <img className="w-full h-full object-cover" alt="المطابخ" src="https://images.unsplash.com/photo-1556911220-e15224bbafb0?w=600&q=80" />
-              <div className="absolute inset-0 bg-black/40 flex items-center justify-center"><h3 className="text-white font-bold">لوازم المطابخ</h3></div>
-            </Link>
-            <Link to="/products?category=bridal" className="relative rounded-xl overflow-hidden h-64 group cursor-pointer block">
-              <img className="w-full h-full object-cover" alt="تجهيز" src="https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=600&q=80" />
-              <div className="absolute inset-0 bg-black/40 flex items-center justify-center"><h3 className="text-white font-bold">تجهيز العرائس</h3></div>
-            </Link>
-          </div>
-        </section>
-      )}
+          <Link to="/products" className="flex items-center gap-2 text-red-600 font-black hover:text-red-700 transition-all group">
+            <span>عرض كل الأقسام</span>
+            <ArrowLeft size={18} className="rtl-flip group-hover:-translate-x-1 transition-transform" />
+          </Link>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <Link to="/products?category=appliances" className="relative rounded-3xl overflow-hidden h-80 group cursor-pointer block shadow-lg shadow-gray-200">
+            <img 
+              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+              alt="الأجهزة الكهربائية" 
+              src="https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=800&q=80" 
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-8">
+              <h3 className="text-white font-black text-2xl">الأجهزة الكهربائية</h3>
+              <p className="text-red-100 text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">أحدث الثلاجات والغسالات والبوتاجازات</p>
+            </div>
+          </Link>
+
+          <Link to="/products?category=kitchen" className="relative rounded-3xl overflow-hidden h-80 group cursor-pointer block shadow-lg shadow-gray-200">
+            <img 
+              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+              alt="لوازم المطابخ" 
+              src="https://images.unsplash.com/photo-1556911220-e15224bbafb0?w=800&q=80" 
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-8">
+              <h3 className="text-white font-black text-2xl">لوازم المطابخ</h3>
+              <p className="text-red-100 text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">كل ما تحتاجه لطبخ أشهى الوجبات</p>
+            </div>
+          </Link>
+
+          <Link to="/products?category=home_supplies" className="relative rounded-3xl overflow-hidden h-80 group cursor-pointer block shadow-lg shadow-gray-200">
+            <img 
+              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+              alt="لوازم المنزل" 
+              src="https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=800&q=80" 
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-8">
+              <h3 className="text-white font-black text-2xl">لوازم المنزل</h3>
+              <p className="text-red-100 text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">معدات التنظيف والعناية بالمنزل</p>
+            </div>
+          </Link>
+        </div>
+      </section>
 
       {/* ─── Req #3: Categories — EXACTLY 5, circular icons ────────────── */}
       <section className="bg-surface-container-low py-16">
