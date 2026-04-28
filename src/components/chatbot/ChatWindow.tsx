@@ -3,6 +3,8 @@ import { Send, X, User, Image as ImageIcon, ShoppingCart, ExternalLink } from 'l
 import { chatService } from './chatService';
 import { useCartStore } from '../../store/cartStore';
 import { useChatStore } from '../../store/chatStore';
+import { useAuthStore } from '../../store/authStore';
+import { orderService } from '../../firebase/services/orderService';
 import { formatPrice } from '../../utils/format';
 
 interface ChatWindowProps {
@@ -20,6 +22,8 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [pendingImage, setPendingImage] = useState<string | null>(null);
+  const [userOrders, setUserOrders] = useState<any[]>([]);
+  const { user } = useAuthStore();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { items: cartItems, addItem } = useCartStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -27,6 +31,20 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
+
+  useEffect(() => {
+    const fetchOrders = async () => {
+      if (user?.id) {
+        try {
+          const orders = await orderService.getUserOrders(user.id);
+          setUserOrders(orders);
+        } catch (error) {
+          console.error("Error fetching user orders for chat:", error);
+        }
+      }
+    };
+    fetchOrders();
+  }, [user]);
 
   useEffect(() => {
     scrollToBottom();
@@ -55,7 +73,7 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
     setIsLoading(true);
 
     try {
-      const response = await chatService.sendMessage(text.trim(), cartItems, finalImage || undefined);
+      const response = await chatService.sendMessage(text.trim(), cartItems, finalImage || undefined, userOrders);
       
       const assistantMessage = {
         id: (Date.now() + 1).toString(),
