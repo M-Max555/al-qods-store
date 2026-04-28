@@ -55,22 +55,17 @@ app.post("/chat", async (req, res) => {
   try {
     const userMessage = req.body?.message || "مرحبا";
     let products = await getProductsFromDatabase();
-
-    // Fallback products if database is empty to prevent hallucination
+    
+    // No fallback products. If DB is empty, AI should know.
     if (!products || products.length === 0) {
-      products = [
-        { name: "خلاط تورنيدو", price: 450, category: "خلاطات", description: "قوي للاستخدام اليومي وموتور متين" },
-        { name: "مروحة فريش", price: 700, category: "مراوح", description: "هدوء تام وتوزيع هواء ممتاز" },
-        { name: "كبة كهربا", price: 300, category: "مطبخ", description: "فرم سريع جداً وسهلة التنظيف" },
-        { name: "غلاية مياه ميديا", price: 250, category: "غلايات", description: "سعة 1.7 لتر وفصل تلقائي" }
-      ];
+      console.warn("⚠️ Warning: Products collection is empty in Firestore.");
     }
 
     const systemPrompt = `
 أنت "محمد"، بائع محترف، لبق جداً، وشيك في معرض "القدس" للأدوات المنزلية.
 
 🚨 قواعد صارمة (خط أحمر):
-1. ممنوع اختراع أي منتج أو سعر أو مواصفات مش موجودة في القائمة تحت. السعر اللي تقوله لازم يكون هو اللي في القائمة بالظبط.
+1. ممنوع اختراع أي منتج أو سعر أو مواصفات مش موجودة في القائمة تحت. لو القائمة فاضية، اعتذر للعميل وقوله إن المخزن بيتحدث حالياً.
 2. لو العميل سأل عن حاجة مش موجودة، قول بذكاء: "دي خلصانة حالياً يا فندم بس عندي بديل شيك جداً وقريب منها 👌" ورشح من القائمة المتاحة بس.
 3. ردودك لازم تكون باللهجة المصرية "الشيك" واللبقة (أسلوب بياع شاطر في معرض براند).
 4. ممنوع الردود العامة زي "أهلاً بك" أو "كيف أساعدك". ادخل في الترشيح والبيع فوراً.
