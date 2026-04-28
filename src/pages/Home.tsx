@@ -152,7 +152,7 @@ export default function Home() {
             <img 
               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
               alt="الأجهزة الكهربائية" 
-              src="https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=800&q=80" 
+              src="https://images.unsplash.com/photo-1571175432290-ef71a5bdf9ec?w=800&q=80" 
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-8">
               <h3 className="text-white font-black text-2xl">الأجهزة الكهربائية</h3>
@@ -164,7 +164,7 @@ export default function Home() {
             <img 
               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
               alt="لوازم المطابخ" 
-              src="https://images.unsplash.com/photo-1556911220-e15224bbafb0?w=800&q=80" 
+              src="https://images.unsplash.com/photo-1556912177-d5448379b140?w=800&q=80" 
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-8">
               <h3 className="text-white font-black text-2xl">لوازم المطابخ</h3>
@@ -176,11 +176,11 @@ export default function Home() {
             <img 
               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
               alt="لوازم المنزل" 
-              src="https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=800&q=80" 
+              src="https://images.unsplash.com/photo-1524758631624-e2822e304c36?w=800&q=80" 
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-8">
               <h3 className="text-white font-black text-2xl">لوازم المنزل</h3>
-              <p className="text-red-100 text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">معدات التنظيف والعناية بالمنزل</p>
+              <p className="text-red-100 text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">أرقى المفروشات ولوازم البيت العصري</p>
             </div>
           </Link>
         </div>
