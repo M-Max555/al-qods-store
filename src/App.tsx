@@ -10,6 +10,7 @@ import { seedFirestore } from './firebase/seed';
 import { useAuthStore } from './store/authStore';
 import { useOfferStore } from './store/offerStore';
 import ChatBot from './components/chatbot/ChatBot';
+import ScrollToTop from './components/utils/ScrollToTop';
 
 // Client Pages - Lazy Loaded
 const Home = lazy(() => import('./pages/Home'));
@@ -61,6 +62,7 @@ export default function App() {
 
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <Toaster
         position="top-center"
         toastOptions={{
