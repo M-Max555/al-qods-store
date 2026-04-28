@@ -16,11 +16,16 @@ export const chatService = {
       const data = await response.json();
       return { 
         content: data.reply || "في مشكلة بسيطة 😅 جرب تاني", 
-        products: []
+        product: data.product,
+        whatsapp: data.whatsapp
       };
     } catch (error) {
       console.error('Chat Service Error:', error);
-      return { content: "عذراً، الخدمة غير متاحة حالياً بسبب خطأ في الاتصال بالسيرفر. يرجى المحاولة لاحقاً.", products: [] };
+      return { 
+        content: "عذراً، الخدمة غير متاحة حالياً بسبب خطأ في الاتصال بالسيرفر. يرجى المحاولة لاحقاً.",
+        product: null,
+        whatsapp: null
+      };
     }
   }
 };

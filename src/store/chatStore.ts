@@ -7,6 +7,12 @@ export interface Message {
   content: string;
   imageUrl?: string;
   products?: any[];
+  product?: {
+    name: string;
+    price: number;
+    image: string;
+  };
+  whatsapp?: string;
 }
 
 export type ConvState = 'browsing' | 'interested' | 'asking_questions' | 'ready_to_buy' | 'order_completed';

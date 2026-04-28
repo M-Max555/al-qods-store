@@ -21,6 +21,7 @@ const Profile = lazy(() => import('./pages/Profile'));
 const Checkout = lazy(() => import('./pages/Checkout'));
 const Offers = lazy(() => import('./pages/Offers'));
 const Favorites = lazy(() => import('./pages/Favorites'));
+const Cart = lazy(() => import('./pages/Cart'));
 
 // Admin Pages - Lazy Loaded
 const AdminLayout = lazy(() => import('./admin/AdminLayout'));
@@ -108,6 +109,7 @@ export default function App() {
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
                     <Route path="/profile" element={<Profile />} />
+                    <Route path="/cart" element={<Cart />} />
                     <Route path="/checkout" element={<Checkout />} />
                     <Route path="*" element={<Home />} />
                   </Routes>

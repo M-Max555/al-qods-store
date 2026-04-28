@@ -259,6 +259,7 @@
 html {
   direction: rtl;
   scroll-behavior: smooth;
+  overflow-x: hidden;
 }
 
 body {
@@ -268,6 +269,8 @@ body {
   padding: 0;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 /* Material Symbols */

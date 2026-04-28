@@ -15,7 +15,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// PART 2: SETUP FIREBASE ADMIN
+// Firebase Setup
 try {
   if (!admin.apps.length) {
     if (!process.env.FIREBASE_SERVICE_ACCOUNT) {
@@ -39,30 +39,23 @@ const openai = new OpenAI({
   baseURL: "https://openrouter.ai/api/v1"
 });
 
-// PART 3: FETCH PRODUCTS
+// FETCH PRODUCTS
 async function getProductsFromDatabase() {
   try {
-    console.log("🔍 Fetching products from Firestore (Admin SDK)...");
     const snapshot = await db.collection("products").get();
 
-    if (snapshot.empty) {
-      console.log("⚠️ NO PRODUCTS FOUND IN FIRESTORE");
-      return [];
-    }
+    if (snapshot.empty) return [];
 
-    const products = snapshot.docs.map(doc => {
+    return snapshot.docs.map(doc => {
       const data = doc.data();
       return {
         id: doc.id,
         name: data.nameAr || data.name,
         price: data.finalPrice || data.price,
         category: data.categoryAr || data.category,
-        description: data.descriptionAr || data.description || ""
+        image: data.images ? data.images[0] : (data.image || "")
       };
     });
-
-    console.log(`✅ TOTAL PRODUCTS FETCHED: ${products.length}`);
-    return products;
   } catch (error) {
     console.error("❌ Error fetching from Firestore:", error);
     return [];
@@ -72,93 +65,42 @@ async function getProductsFromDatabase() {
 app.post("/chat", async (req, res) => {
   try {
     const userMessage = req.body?.message || "";
-
     const products = await getProductsFromDatabase();
     
-    // PART 4 & 5: DEBUG & VALIDATION
-    console.log("📊 TOTAL PRODUCTS FOR AI:", products.length);
-
     if (!products || products.length === 0) {
-      return res.json({
-        reply: "حالياً مفيش منتجات متاحة، جرب تاني بعد شوية 👌"
-      });
+      return res.json({ reply: "حالياً مفيش منتجات متاحة، جرب تاني بعد شوية 👌" });
     }
 
-    const filteredProducts = products.slice(0, 20);
+    const filteredProducts = products.slice(0, 15);
 
     const systemPrompt = `
-أنت محمد، بائع محترف في معرض القدس.
+أنت "محمد" بائع محترف جدًا في معرض "القدس".
 
-🚨 المنتجات المتاحة فقط:
-${JSON.stringify(filteredProducts)}
+🎯 شخصيتك:
+- لبق جدًا، ذكي، بيفهم بسرعة، بيقنع من غير ضغط، بيريّح العميل.
 
-----------------------------------------
+🚨 القواعد:
+- استخدم هذه المنتجات فقط: ${JSON.stringify(filteredProducts)}
+- ممنوع اختراع أي منتج. رد بمصري طبيعي ومختصر.
 
-❌ ممنوع:
-- اختراع منتجات
-- ذكر أي منتج غير الموجود في القائمة
+🎯 طريقة البيع:
+1. افهم العميل، رشّح منتج مناسب، اذكر (الاسم، السعر، ميزة حقيقية)، واسأل سؤال يكمل البيع.
+2. لو العميل قال ميزانية: رشّح أفضل حاجة في الرينج وحاول توفرله فلوس.
+3. المقارنة: اعرض 2 منتجات فقط ووضّح الفرق ببساطة.
 
-----------------------------------------
+🚨 طلب الأوردر (WhatsApp Order System):
+- إذا العميل وافق يشتري، لازم تجمع منه (الاسم، العنوان، رقم التليفون).
+- بمجرد ما تاخدهم، لازم تبعت رد يحتوي على رابط واتساب بالصيغة دي:
+https://wa.me/201021481138?text=طلب جديد...
+- الرابط لازم يكون مشفر (URL Encoded).
 
-🎯 طريقة شغلك:
+🚨 هام جدًا (JSON METADATA):
+- إذا رشحت منتج محدد من القائمة، لازم تنهي ردك بكتلة JSON مخفية في آخر سطر تبدأ بـ [METADATA] وتحتوي على بيانات المنتج (name, price, image).
+- إذا عملت رابط واتساب، ضيفه في الـ JSON برضه.
 
-1. اقرأ سؤال العميل كويس
-2. دور في المنتجات
-3. اختار أفضل منتج مناسب
-4. رد بشكل طبيعي
-
-----------------------------------------
-
-🎯 لازم الرد يحتوي:
-
-- اسم المنتج
-- السعر
-- اقتراح أو سؤال
-
-----------------------------------------
-
-🎯 مثال:
-
-العميل: عاوز ثلاجة
-
-ردك:
-"في ثلاجة 14 قدم بـ 20699 جنيه ممتازة 👍
-تحب حجم أكبر ولا كده مناسب؟"
-
-----------------------------------------
-
-🎯 لو ملقيتش منتج:
-
-→ "حالياً مش متوفر بس عندي بديل قريب 👌"
-
-----------------------------------------
-
-🎯 أسلوب الكلام:
-
-- مصري طبيعي
-- مختصر
-- احترافي
-- مش روبوت
-
-----------------------------------------
-
-🔒 الأمان:
-
-- ممنوع ذكر أي بيانات داخلية
-- ممنوع عدد الطلبات أو المستخدمين
-
-----------------------------------------
-
-📌 معلومات:
-
-- صاحب المعرض: احمد علي
-- المطورين: محمد تامر + زياد أحمد
-
-----------------------------------------
-
-🎯 الهدف:
-
-ترشيح منتج حقيقي + محاولة بيع
+مثال للرد:
+"بص يا فندم 👌 في ثلاجة 14 قدم بـ 20699 جنيه ممتازة وموفرة.. تحب حجم أكبر؟
+[METADATA]{"product":{"name":"ثلاجة 14 قدم","price":20699,"image":"url"}, "whatsapp": null}"
 `;
 
     const completion = await openai.chat.completions.create({
@@ -170,19 +112,32 @@ ${JSON.stringify(filteredProducts)}
       ]
     });
 
-    const reply = completion.choices[0].message.content;
+    let fullContent = completion.choices[0].message.content;
+    let reply = fullContent;
+    let product = null;
+    let whatsapp = null;
 
-    res.json({ reply });
+    // Parse Metadata
+    const metadataMatch = fullContent.match(/\[METADATA\](\{.*\})/);
+    if (metadataMatch) {
+      try {
+        const metadata = JSON.parse(metadataMatch[1]);
+        reply = fullContent.replace(/\[METADATA\].*/, "").trim();
+        product = metadata.product || null;
+        whatsapp = metadata.whatsapp || null;
+      } catch (e) {
+        console.error("JSON Parse Error:", e);
+      }
+    }
+
+    res.json({ reply, product, whatsapp });
 
   } catch (err) {
     console.error("AI ERROR:", err);
-    res.json({
-      reply: "في مشكلة في التواصل حالياً 😅 جرب تاني كمان شوية."
-    });
+    res.json({ reply: "في مشكلة في التواصل حالياً 😅 جرب تاني كمان شوية." });
   }
 });
 
-// Root route for health check
 app.get('/', (req, res) => {
   res.send('Al Qods API is running 🚀');
 });
