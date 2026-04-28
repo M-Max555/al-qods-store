@@ -64,14 +64,14 @@ async function getProductsFromDatabase() {
 
 app.post("/chat", async (req, res) => {
   try {
-    const userMessage = req.body?.message || "";
+    const { message: userMessage, imageUrl, cartItems } = req.body;
     const products = await getProductsFromDatabase();
     
     if (!products || products.length === 0) {
       return res.json({ reply: "حالياً مفيش منتجات متاحة، جرب تاني بعد شوية 👌" });
     }
 
-    const filteredProducts = products.slice(0, 15);
+    const filteredProducts = products.slice(0, 20);
 
     const systemPrompt = `
 أنت "محمد" مساعدك الشخصي وبائع محترف في معرض "القدس".
@@ -86,6 +86,7 @@ app.post("/chat", async (req, res) => {
 🚨 القواعد:
 - استخدم هذه المنتجات فقط: ${JSON.stringify(filteredProducts)}
 - ممنوع اختراع أي منتج. رد بمصري طبيعي ومختصر.
+- إذا أرسل العميل صورة، حللها بدقة (تعرف على نوع الجهاز، لونه، ماركته) ثم رشح أقرب منتج متاح عندنا في القائمة أعلاه.
 
 🎯 طريقة البيع:
 1. افهم العميل، رشّح منتج مناسب، اذكر (الاسم، السعر، ميزة حقيقية)، واسأل سؤال يكمل البيع.
@@ -107,12 +108,24 @@ https://wa.me/201021481138?text=طلب جديد...
 [METADATA]{"product":{"name":"ثلاجة 14 قدم","price":20699,"image":"url"}, "whatsapp": null}"
 `;
 
+    // Prepare content for vision model support
+    const userContent = [];
+    if (userMessage) {
+      userContent.push({ type: "text", text: userMessage });
+    }
+    if (imageUrl) {
+      userContent.push({ 
+        type: "image_url", 
+        image_url: { url: imageUrl } 
+      });
+    }
+
     const completion = await openai.chat.completions.create({
-      model: "deepseek/deepseek-chat",
+      model: imageUrl ? "google/gemini-flash-1.5" : "deepseek/deepseek-chat",
       temperature: 0.3,
       messages: [
         { role: "system", content: systemPrompt },
-        { role: "user", content: userMessage }
+        { role: "user", content: imageUrl ? userContent : userMessage }
       ]
     });
 

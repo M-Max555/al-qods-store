@@ -19,6 +19,7 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
   const { messages, addMessage } = useChatStore();
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [pendingImage, setPendingImage] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { items: cartItems, addItem } = useCartStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -38,21 +39,23 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
   }, [messages, isLoading]);
 
   const processMessage = async (text: string, imageBase64?: string) => {
-    if (!text.trim() && !imageBase64) return;
+    const finalImage = imageBase64 || pendingImage;
+    if (!text.trim() && !finalImage) return;
 
     const userMessage = {
       id: Date.now().toString(),
       role: 'user' as const,
       content: text.trim(),
-      imageUrl: imageBase64
+      imageUrl: finalImage || undefined
     };
 
     addMessage(userMessage);
     setInput('');
+    setPendingImage(null);
     setIsLoading(true);
 
     try {
-      const response = await chatService.sendMessage(text.trim(), cartItems);
+      const response = await chatService.sendMessage(text.trim(), cartItems, finalImage || undefined);
       
       const assistantMessage = {
         id: (Date.now() + 1).toString(),
@@ -88,7 +91,7 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
     const reader = new FileReader();
     reader.onloadend = () => {
       const base64String = reader.result as string;
-      processMessage("شوفيلي حاجة شبه الصورة دي", base64String);
+      setPendingImage(base64String);
     };
     reader.readAsDataURL(file);
     if (fileInputRef.current) fileInputRef.current.value = '';
@@ -230,12 +233,23 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
 
       {/* Input */}
       <div className="p-4 bg-white border-t border-gray-50">
+        {pendingImage && (
+          <div className="mb-3 relative inline-block animate-scale-in">
+            <img src={pendingImage} alt="Preview" className="w-20 h-20 object-cover rounded-xl border-2 border-zinc-100 shadow-md" />
+            <button 
+              onClick={() => setPendingImage(null)}
+              className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full p-1 shadow-lg hover:bg-red-700 transition-colors"
+            >
+              <X size={12} />
+            </button>
+          </div>
+        )}
         <form onSubmit={handleSend} className="flex gap-3 items-center">
           <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={handleImageUpload} />
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="w-12 h-12 flex items-center justify-center text-zinc-400 hover:text-zinc-900 hover:bg-gray-50 rounded-2xl transition-all active:scale-90"
+            className={`w-12 h-12 flex items-center justify-center rounded-2xl transition-all active:scale-90 ${pendingImage ? 'text-red-600 bg-red-50' : 'text-zinc-400 hover:text-zinc-900 hover:bg-gray-50'}`}
             title="إرفاق صورة"
           >
             <ImageIcon size={26} />
@@ -246,14 +260,14 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="اسأل محمد بائع القدس..."
+              placeholder="اسأل محمد أو ارفع صورة..."
               className="w-full px-5 py-3.5 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-zinc-900 outline-none transition-all text-sm font-medium placeholder:text-gray-400 shadow-inner"
             />
           </div>
           
           <button
             type="submit"
-            disabled={!input.trim() || isLoading}
+            disabled={(!input.trim() && !pendingImage) || isLoading}
             className="w-14 h-14 bg-zinc-900 text-white rounded-2xl flex items-center justify-center hover:bg-red-600 transition-all disabled:opacity-50 flex-shrink-0 shadow-xl active:scale-95"
           >
             <Send size={24} className="rtl-flip" />
