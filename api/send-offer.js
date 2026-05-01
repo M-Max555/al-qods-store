@@ -12,6 +12,11 @@ export default async function handler(req, res) {
   }
 
   try {
+    // 0. Check if DB is initialized
+    if (!db) {
+      throw new Error('Firebase Admin not initialized. Check FIREBASE_SERVICE_ACCOUNT env var.');
+    }
+
     // 1. Fetch all leads from Firestore
     const leadsSnapshot = await db.collection('leads').get();
     const leads = leadsSnapshot.docs.map(doc => doc.data());

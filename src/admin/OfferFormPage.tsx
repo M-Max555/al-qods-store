@@ -87,6 +87,7 @@ export default function OfferFormPage() {
   };
 
   const sendWhatsAppBroadcast = async (offerTitle: string, discount: number) => {
+    const loadingToast = toast.loading('جاري إرسال تنبيهات واتساب للعملاء...');
     try {
       const response = await fetch('/api/send-offer', {
         method: 'POST',
@@ -97,13 +98,19 @@ export default function OfferFormPage() {
           offerUrl: window.location.origin + '/offers'
         })
       });
+
       const data = await response.json();
-      if (data.success) {
-        toast.success('تم إرسال العرض لجميع العملاء عبر واتساب 📢');
+      toast.dismiss(loadingToast);
+
+      if (response.ok && data.success) {
+        toast.success(`تم الإرسال بنجاح! تم إرسال ${data.results?.sent || 0} رسالة.`);
+      } else {
+        throw new Error(data.error || 'حدث خطأ في السيرفر');
       }
-    } catch (err) {
+    } catch (err: any) {
+      toast.dismiss(loadingToast);
       console.error("Failed to send broadcast:", err);
-      toast.error("فشل إرسال التنبيهات عبر واتساب");
+      toast.error(`فشل إرسال الواتساب: ${err.message || 'تأكد من إعدادات Vercel'}`);
     }
   };
 
