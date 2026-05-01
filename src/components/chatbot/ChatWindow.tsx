@@ -52,13 +52,8 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
 
   useEffect(() => {
     scrollToBottom();
-    
-    // Auto-redirect for WhatsApp
-    const lastMessage = messages[messages.length - 1];
-    if (lastMessage?.role === 'assistant' && lastMessage.whatsapp) {
-      window.open(lastMessage.whatsapp, '_blank');
-    }
   }, [messages, isLoading]);
+
 
   const processMessage = async (text: string, imageBase64?: string) => {
     const finalImage = imageBase64 || pendingImage;
