@@ -39,14 +39,18 @@ export default async function handler(req, res) {
     // For this demonstration, we'll process them in the handler with a small delay
     for (const lead of leads) {
       try {
-        let phone = lead.phone.trim();
+        // Clean phone: remove all non-digits
+        let phone = lead.phone.replace(/\D/g, '');
         
-        // Format phone: 01020733671 -> 201020733671
+        // Ensure Egypt format (201...)
         if (phone.startsWith('0')) {
           phone = '2' + phone;
         } else if (!phone.startsWith('2')) {
           phone = '2' + phone;
         }
+        
+        // Final sanity check: length for Egypt should be 12 (20 + 10 digits)
+        if (phone.length < 10) throw new Error('Invalid phone number length');
 
         const message = `🔥 عرض جديد من معرض القدس!\n\nخصم ${discount}% على ${offerTitle} 💸\n\nشوف العرض دلوقتي:\n${offerUrl || 'https://al-qods-store.vercel.app/offers'}`;
 
@@ -67,11 +71,15 @@ export default async function handler(req, res) {
 
         if (!response.ok) {
           const errData = await response.json();
+          console.error(`[WhatsApp API Error] Status ${response.status}:`, errData);
           throw new Error(errData.error?.message || 'WhatsApp API Error');
         }
 
-        // Log the message being sent (Simulating API call)
-        console.log(`[WhatsApp] Sent to ${phone}: ${offerTitle}`);
+        const data = await response.json();
+        const messageId = data.messages?.[0]?.id || 'no-id';
+
+        // Log the message being sent
+        console.log(`[WhatsApp] Successfully queued to Meta. Phone: ${phone}, ID: ${messageId}`);
         
         results.sent++;
         
