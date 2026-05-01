@@ -60,7 +60,20 @@ export default function Navbar() {
   useEffect(() => {
     setIsMobileMenuOpen(false);
     setIsSearchOpen(false);
+    setIsUserMenuOpen(false);
   }, [location]);
+
+  // Prevent body scroll when mobile menus are open
+  useEffect(() => {
+    if ((isMobileMenuOpen || isUserMenuOpen) && window.innerWidth < 1024) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isMobileMenuOpen, isUserMenuOpen]);
 
   useEffect(() => {
     if (isSearchOpen && searchRef.current) searchRef.current.focus();
@@ -181,68 +194,84 @@ export default function Navbar() {
 
             {/* ─── User Dropdown (Req #7) ─── */}
             {isUserMenuOpen && (
-              <div className="absolute -left-12 sm:left-0 top-full mt-3 w-[calc(100vw-32px)] sm:w-64 bg-white rounded-2xl shadow-2xl border border-gray-100 py-2 animate-slide-down z-50 max-h-[70vh] overflow-y-auto">
-
-                <div className="px-4 py-3 border-b border-gray-100">
-                  <p className="font-semibold text-gray-900 text-sm">{user?.name}</p>
-                  <p className="text-gray-500 text-xs mt-0.5">{user?.phone || user?.email}</p>
-                </div>
-
-                <Link
-                  to="/profile"
-                  onClick={() => setIsUserMenuOpen(false)}
-                  className="flex items-center gap-3 px-4 py-2.5 hover:bg-red-50 text-gray-700 hover:text-red-600 transition-colors text-sm"
-                >
-                  <UserCog size={16} />
-                  <span>{t('edit_data')}</span>
-                </Link>
-
-                <button
-                  onClick={() => {
-                    console.log('[Navbar] Change Name clicked');
-                    setIsUserMenuOpen(false);
-                    setShowChangeName(true);
-                  }}
-                  className="flex items-center gap-3 px-4 py-2.5 hover:bg-red-50 text-gray-700 hover:text-red-600 transition-colors text-sm w-full"
-                >
-                  <User size={16} />
-                  <span>{t('change_name')}</span>
-                </button>
-
-                <button
-                  onClick={() => {
-                    console.log('[Navbar] Change Phone clicked');
-                    setIsUserMenuOpen(false);
-                    setShowChangePhone(true);
-                  }}
-                  className="flex items-center gap-3 px-4 py-2.5 hover:bg-red-50 text-gray-700 hover:text-red-600 transition-colors text-sm w-full"
-                >
-                  <Phone size={16} />
-                  <span>{t('change_phone')}</span>
-                </button>
-
-
-                <div className="border-t border-gray-100 my-1 bg-gray-50/50">
-                  <SettingsSection isCompact />
-                </div>
-
-
-                <div className="border-t border-gray-100 mt-1 pt-1">
-                  <button
-                    onClick={handleLogout}
-                    className="flex items-center gap-3 px-4 py-2.5 hover:bg-red-50 text-red-600 transition-colors text-sm w-full"
+              <div className="fixed inset-0 w-full h-screen bg-white z-[9999] overflow-y-auto overscroll-contain sm:absolute sm:inset-auto sm:top-full sm:mt-3 sm:w-64 sm:h-auto sm:right-0 sm:left-auto sm:rounded-2xl sm:shadow-2xl sm:border sm:border-gray-100 sm:py-2 animate-slide-from-right sm:animate-slide-down p-0 flex flex-col max-h-screen">
+                
+                {/* Mobile Header with Close Button */}
+                <div className="flex sm:hidden items-center justify-between p-4 border-b border-gray-100 bg-white sticky top-0 z-20">
+                  <span className="font-bold text-lg text-gray-900">{t('profile')}</span>
+                  <button 
+                    onClick={() => setIsUserMenuOpen(false)}
+                    className="p-2 hover:bg-gray-100 rounded-full transition-colors"
                   >
-                    <LogOut size={16} />
-                    <span>{t('logout')}</span>
+                    <X size={24} className="text-gray-600" />
+                  </button>
+                </div>
+
+                <div className="px-6 py-6 sm:px-4 sm:py-3 border-b border-gray-100 flex items-center gap-4 sm:block">
+                  <img
+                    src={user?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'U')}&background=d32f2f&color=fff`}
+                    alt={user?.name}
+                    className="w-16 h-16 sm:hidden rounded-full object-cover border-4 border-red-50 flex-shrink-0"
+                  />
+                  <div>
+                    <p className="font-bold sm:font-semibold text-gray-900 text-lg sm:text-sm truncate max-w-[200px] sm:max-w-none">{user?.name}</p>
+                    <p className="text-gray-500 text-sm sm:text-xs mt-0.5 truncate">{user?.phone || user?.email}</p>
+                  </div>
+                </div>
+
+                <div className="flex-1 p-2 sm:p-0 flex flex-col sm:block overflow-y-auto">
+                  <Link
+                    to="/profile"
+                    onClick={() => setIsUserMenuOpen(false)}
+                    className="flex items-center gap-4 sm:gap-3 px-6 sm:px-4 py-4 sm:py-2.5 hover:bg-red-50 text-gray-700 hover:text-red-600 transition-colors text-base sm:text-sm rounded-xl sm:rounded-none"
+                  >
+                    <UserCog size={20} className="sm:w-4 sm:h-4 text-zinc-400" />
+                    <span>{t('edit_data')}</span>
+                  </Link>
+
+                  <button
+                    onClick={() => {
+                      setIsUserMenuOpen(false);
+                      setShowChangeName(true);
+                    }}
+                    className="flex items-center gap-4 sm:gap-3 px-6 sm:px-4 py-4 sm:py-2.5 hover:bg-red-50 text-gray-700 hover:text-red-600 transition-colors text-base sm:text-sm w-full text-right rounded-xl sm:rounded-none"
+                  >
+                    <User size={20} className="sm:w-4 sm:h-4 text-zinc-400" />
+                    <span>{t('change_name')}</span>
                   </button>
 
                   <button
-                    onClick={() => { handleLogout(); navigate('/login'); }}
-                    className="flex items-center gap-3 px-4 py-2.5 hover:bg-red-50 text-gray-700 hover:text-red-600 transition-colors text-sm w-full"
+                    onClick={() => {
+                      setIsUserMenuOpen(false);
+                      setShowChangePhone(true);
+                    }}
+                    className="flex items-center gap-4 sm:gap-3 px-6 sm:px-4 py-4 sm:py-2.5 hover:bg-red-50 text-gray-700 hover:text-red-600 transition-colors text-base sm:text-sm w-full text-right rounded-xl sm:rounded-none"
                   >
-                    <KeyRound size={16} />
-                    <span>تسجيل دخول بحساب آخر</span>
+                    <Phone size={20} className="sm:w-4 sm:h-4 text-zinc-400" />
+                    <span>{t('change_phone')}</span>
                   </button>
+
+                  <div className="border-t border-gray-100 my-2 bg-gray-50/50 sm:bg-transparent">
+                    <SettingsSection isCompact />
+                  </div>
+
+                  <div className="border-t border-gray-100 mt-auto sm:mt-1 pt-1">
+                    <button
+                      onClick={handleLogout}
+                      className="flex items-center gap-4 sm:gap-3 px-6 sm:px-4 py-4 sm:py-2.5 hover:bg-red-50 text-red-600 transition-colors text-base sm:text-sm w-full text-right rounded-xl sm:rounded-none"
+                    >
+                      <LogOut size={20} className="sm:w-4 sm:h-4" />
+                      <span>{t('logout')}</span>
+                    </button>
+
+                    <button
+                      onClick={() => { handleLogout(); navigate('/login'); }}
+                      className="flex items-center gap-4 sm:gap-3 px-6 sm:px-4 py-4 sm:py-2.5 hover:bg-red-50 text-gray-700 hover:text-red-600 transition-colors text-base sm:text-sm w-full text-right rounded-xl sm:rounded-none"
+                    >
+                      <KeyRound size={20} className="sm:w-4 sm:h-4 text-zinc-400" />
+                      <span>تسجيل دخول بحساب آخر</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
