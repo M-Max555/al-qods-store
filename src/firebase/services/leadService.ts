@@ -1,12 +1,11 @@
 import { 
   collection, 
-  addDoc, 
   query, 
   where, 
   getDocs, 
-  serverTimestamp,
   Timestamp
 } from 'firebase/firestore';
+
 import { db } from '../firestore';
 import { Lead } from '../../types';
 
@@ -35,17 +34,20 @@ export const leadService = {
         };
       }
 
-      // 3. Save to Firestore
-      await addDoc(collection(db, LEADS_COLLECTION), {
-        phone,
-        source,
-        createdAt: serverTimestamp(),
+      // 3. Save via Serverless API
+      const response = await fetch('/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone, source })
       });
+
+      if (!response.ok) throw new Error('Failed to save lead');
 
       return { 
         success: true, 
         message: 'تم استلام طلبك بنجاح! سنتواصل معك بأفضل العروض قريباً.' 
       };
+
     } catch (error) {
       console.error('Error saving lead:', error);
       return { 

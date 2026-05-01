@@ -4,18 +4,19 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "concurrently \"vite\" \"node server/server.js\"",
-    "dev:frontend": "vite",
-    "dev:backend": "node server/server.js",
+    "dev": "vite",
     "build": "vite build",
     "preview": "vite preview"
+
   },
   "dependencies": {
     "clsx": "2.1.1",
     "date-fns": "^4.1.0",
     "firebase": "^12.12.1",
+    "firebase-admin": "^13.8.0",
     "framer-motion": "^12.38.0",
     "lucide-react": "^1.11.0",
+    "openai": "^6.35.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-hot-toast": "^2.6.0",

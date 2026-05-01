@@ -1,7 +1,7 @@
 import { 
-  collection, doc, getDocs, 
-  addDoc, updateDoc, query, where, orderBy 
+  collection, getDocs, query, where, orderBy 
 } from 'firebase/firestore';
+
 
 import { db } from '../firestore';
 import type { Order, OrderStatusType } from '../../types';
@@ -24,8 +24,16 @@ export const orderService = {
       updatedAt: new Date().toISOString()
     };
 
-    const docRef = await addDoc(collection(db, COLLECTION_NAME), newOrder);
-    return { id: docRef.id, ...newOrder } as Order;
+    const response = await fetch('/api/order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'create', orderData: newOrder })
+    });
+
+    if (!response.ok) throw new Error('Failed to create order');
+    const data = await response.json();
+    return { id: data.id, ...newOrder } as Order;
+
   },
 
   async getUserOrders(userId: string): Promise<Order[]> {
@@ -45,11 +53,14 @@ export const orderService = {
   },
 
   async updateOrderStatus(orderId: string, status: OrderStatusType): Promise<void> {
-    const docRef = doc(db, COLLECTION_NAME, orderId);
-    await updateDoc(docRef, { 
-      status,
-      updatedAt: new Date().toISOString()
+    const response = await fetch('/api/order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'updateStatus', orderId, status })
     });
+
+    if (!response.ok) throw new Error('Failed to update status');
+
 
     // Part 12: Order Status Automation
     const snapshot = await getDocs(query(collection(db, COLLECTION_NAME), where('orderId', '==', orderId)));

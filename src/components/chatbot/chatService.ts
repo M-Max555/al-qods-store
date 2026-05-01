@@ -1,9 +1,8 @@
 export const chatService = {
   async sendMessage(message: string, cartItems: any[], imageUrl?: string, userOrders: any[] = []) {
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const response = await fetch('/api/chat', {
 
-      const response = await fetch(`${apiUrl}/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message, cartItems, imageUrl, userOrders })
