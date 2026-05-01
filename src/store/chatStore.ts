@@ -13,7 +13,9 @@ export interface Message {
     image: string;
   };
   whatsapp?: string;
+  whatsappLabel?: string;
 }
+
 
 export type ConvState = 'browsing' | 'interested' | 'asking_questions' | 'ready_to_buy' | 'order_completed';
 

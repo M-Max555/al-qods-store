@@ -85,7 +85,8 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
         content: response.content,
         product: response.product,
         products: response.products,
-        whatsapp: response.whatsapp
+        whatsapp: response.whatsapp,
+        whatsappLabel: response.whatsappLabel
       };
 
       
@@ -245,9 +246,10 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
                     rel="noreferrer"
                     className="mt-4 flex items-center justify-center gap-2 bg-green-600 text-white py-3 rounded-2xl font-black text-sm hover:bg-green-700 transition-all shadow-lg shadow-green-100"
                   >
-                    <span>{t('confirm_whatsapp')}</span>
+                    <span>{msg.whatsappLabel || t('confirm_whatsapp')}</span>
                     <ExternalLink size={18} />
                   </a>
+
 
                 )}
               </div>
