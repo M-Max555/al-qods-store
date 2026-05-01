@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Send, X, User, Image as ImageIcon, ShoppingCart, ExternalLink } from 'lucide-react';
+import toast from 'react-hot-toast';
+
 import { chatService } from './chatService';
 import { useCartStore } from '../../store/cartStore';
 import { useChatStore } from '../../store/chatStore';

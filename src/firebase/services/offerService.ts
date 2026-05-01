@@ -44,13 +44,8 @@ export const offerService = {
       const leadsSnapshot = await getDocs(collection(db, 'leads'));
       const leads = leadsSnapshot.docs.map(doc => doc.data());
       
-      const message = `🔥 عرض جديد من معرض القدس:
-${offer.title}
-${offer.description}
-خصم يصل إلى ${offer.discountPercentage}%!
-شاهد التفاصيل الآن: https://alquds-store.web.app/offers`;
-
       console.log(`[Automation] Notifying ${leads.length} leads about new offer.`);
+
       // In a real system, we'd trigger a bulk WhatsApp API here
     } catch (err) {
       console.error('Error notifying leads:', err);

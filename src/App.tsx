@@ -36,6 +36,8 @@ const EditProductPage = lazy(() => import('./admin/EditProductPage'));
 const OffersPage = lazy(() => import('./admin/OffersPage'));
 const OfferFormPage = lazy(() => import('./admin/OfferFormPage'));
 const AnalyticsPage = lazy(() => import('./admin/AnalyticsPage'));
+const SetupOwnerPage = lazy(() => import('./admin/SetupOwnerPage'));
+
 
 const PageLoader = () => (
   <div className="min-h-[60vh] flex items-center justify-center">
@@ -109,6 +111,8 @@ export default function App() {
             <Route path="analytics" element={<AnalyticsPage />} />
           </Route>
 
+
+
           {/* Client Routes */}
           <Route path="/*" element={
             <>
@@ -129,7 +133,9 @@ export default function App() {
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/cart" element={<Cart />} />
                     <Route path="/checkout" element={<Checkout />} />
+                    <Route path="/setup-owner" element={<SetupOwnerPage />} />
                     <Route path="*" element={<Home />} />
+
                   </Routes>
                 </main>
                 <Footer />

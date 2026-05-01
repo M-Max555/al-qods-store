@@ -75,7 +75,8 @@ export const userService = {
     return snapshot.docs[0].data() as User;
   },
 
-  async updateUserRole(uid: string, role: 'admin' | 'user'): Promise<void> {
+  async updateUserRole(uid: string, role: 'admin' | 'user' | 'owner'): Promise<void> {
+
     const docRef = doc(db, 'users', uid);
     await updateDoc(docRef, { role });
   },

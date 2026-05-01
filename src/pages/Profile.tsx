@@ -66,12 +66,14 @@ export default function Profile() {
   };
 
   const handleLanguageChange = async (lang: 'ar' | 'en') => {
+    if (!user) return;
     if (user.language === lang) return;
     try {
-      const userRef = doc(db, 'users', user!.id);
+      const userRef = doc(db, 'users', user.id);
       await updateDoc(userRef, { language: lang });
       setUser({ ...user, language: lang });
       localStorage.setItem('alquds_lang', lang);
+
       toast.success(lang === 'ar' ? 'تم تغيير اللغة للعربية' : 'Language changed to English');
       // In a real app, this would trigger i18n reload
     } catch (err) {
@@ -80,12 +82,14 @@ export default function Profile() {
   };
 
   const handleThemeChange = async (theme: 'light' | 'dark') => {
+    if (!user) return;
     if (user.theme === theme) return;
     try {
-      const userRef = doc(db, 'users', user!.id);
+      const userRef = doc(db, 'users', user.id);
       await updateDoc(userRef, { theme });
       setUser({ ...user, theme });
       localStorage.setItem('alquds_theme', theme);
+
       
       // Apply theme instantly
       if (theme === 'dark') {
