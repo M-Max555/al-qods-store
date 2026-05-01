@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, ChevronLeft, ChevronRight, Zap } from 'lucide-react';
 import { useProductStore } from '../store/productStore';
 import { leadService } from '../firebase/services/leadService';
+import { t } from '../utils/i18n';
+
 
 import ProductCard from '../components/ui/ProductCard';
 import { ProductGridSkeleton } from '../components/ui/LoadingSpinner';
@@ -160,13 +162,14 @@ export default function Home() {
       <section className="py-16 px-4 sm:px-6 max-w-7xl mx-auto">
         <div className="flex justify-between items-end mb-10">
           <div>
-            <h2 className="font-headline-lg border-r-4 border-red-600 pr-4 mb-2">أقوى الأقسام</h2>
-            <p className="text-gray-500 mr-5 text-sm">تصفح أفضل المنتجات المختارة لك</p>
+            <h2 className="font-headline-lg border-r-4 border-red-600 pr-4 mb-2">{t('featured_products')}</h2>
+            <p className="text-gray-500 mr-5 text-sm">{t('shop_now')}</p>
           </div>
           <Link to="/products" className="flex items-center gap-2 text-red-600 font-black hover:text-red-700 transition-all group">
-            <span>عرض كل الأقسام</span>
+            <span>{t('shop_now')}</span>
             <ArrowLeft size={18} className="rtl-flip group-hover:-translate-x-1 transition-transform" />
           </Link>
+
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -177,9 +180,10 @@ export default function Home() {
               src="/assets/appliances-cat.png" 
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-8">
-              <h3 className="text-white font-black text-2xl">الأجهزة الكهربائية</h3>
-              <p className="text-red-100 text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">أحدث الثلاجات والغسالات والبوتاجازات</p>
+              <h3 className="text-white font-black text-2xl">{t('appliances')}</h3>
+              <p className="text-red-100 text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">{t('dishwasher')}</p>
             </div>
+
           </Link>
 
           <Link to="/products?category=kitchen" className="relative rounded-3xl overflow-hidden h-80 group cursor-pointer block shadow-lg shadow-gray-200">
@@ -189,9 +193,10 @@ export default function Home() {
               src="/assets/kitchen-cat.png" 
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-8">
-              <h3 className="text-white font-black text-2xl">لوازم المطابخ</h3>
-              <p className="text-red-100 text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">كل ما تحتاجه لطبخ أشهى الوجبات</p>
+              <h3 className="text-white font-black text-2xl">{t('kitchen')}</h3>
+              <p className="text-red-100 text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">{t('countertops')}</p>
             </div>
+
           </Link>
 
           <Link to="/products?category=home_supplies" className="relative rounded-3xl overflow-hidden h-80 group cursor-pointer block shadow-lg shadow-gray-200">
@@ -201,9 +206,10 @@ export default function Home() {
               src="/assets/home-cat.png" 
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-8">
-              <h3 className="text-white font-black text-2xl">لوازم المنزل</h3>
-              <p className="text-red-100 text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">أرقى المفروشات ولوازم البيت العصري</p>
+              <h3 className="text-white font-black text-2xl">{t('home_supplies')}</h3>
+              <p className="text-red-100 text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">{t('home_repair_service')}</p>
             </div>
+
           </Link>
         </div>
       </section>
@@ -228,8 +234,9 @@ export default function Home() {
                     {categoryIcons[cat.slug] || 'category'}
                   </span>
                 </div>
-                <span className="font-label-md text-center text-sm">{cat.nameAr}</span>
+                <span className="font-label-md text-center text-sm">{t(cat.slug)}</span>
               </Link>
+
             ))}
           </div>
         </div>
@@ -342,8 +349,9 @@ export default function Home() {
                 disabled={isSubmittingLead}
                 className="w-full sm:w-auto bg-white text-red-700 hover:bg-red-50 font-bold px-8 py-3 rounded-xl transition-all active:scale-95 text-sm whitespace-nowrap disabled:opacity-70 disabled:cursor-not-allowed shadow-lg"
               >
-                {isSubmittingLead ? 'جاري الإرسال...' : 'أرسل الآن'}
+                {isSubmittingLead ? '...' : t('send_now')}
               </button>
+
             </div>
             {leadMessage && (
               <p className={`mt-4 text-sm font-bold ${leadMessage.includes('بنجاح') || leadMessage.includes('بالفعل') ? 'text-green-300' : 'text-yellow-300 animate-shake'}`}>

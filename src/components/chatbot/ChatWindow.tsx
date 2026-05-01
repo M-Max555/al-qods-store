@@ -8,6 +8,8 @@ import { useChatStore } from '../../store/chatStore';
 import { useAuthStore } from '../../store/authStore';
 import { orderService } from '../../firebase/services/orderService';
 import { formatPrice } from '../../utils/format';
+import { t } from '../../utils/i18n';
+
 
 interface ChatWindowProps {
   onClose: () => void;
@@ -129,12 +131,13 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
 
           </div>
           <div>
-            <h3 className="font-black text-xl leading-tight">محمد مساعدك الشخصي</h3>
+            <h3 className="font-black text-xl leading-tight">{t('salesman_name')}</h3>
             <div className="flex items-center gap-1.5 mt-1">
               <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-              <p className="text-zinc-400 text-xs font-bold uppercase tracking-widest">متصل الآن لمساعدتك</p>
+              <p className="text-zinc-400 text-xs font-bold uppercase tracking-widest">{t('salesman_online')}</p>
             </div>
           </div>
+
         </div>
         <button 
           onClick={onClose}
@@ -189,13 +192,14 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
                                 images: [p.image],
                                 stock: 10
                               } as any);
-                              toast.success('تمت الإضافة للسلة');
+                              toast.success(t('order_success'));
                             }}
                             className="mt-1 text-zinc-900 text-[10px] font-bold hover:text-red-600 transition-colors flex items-center gap-1"
                           >
                             <ShoppingCart size={12} />
-                            <span>أضف للسلة</span>
+                            <span>{t('add_to_cart')}</span>
                           </button>
+
                         </div>
                       </div>
                     ))}
@@ -219,14 +223,16 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
                               images: [msg.product.image],
                               stock: 10
                             } as any);
-                            toast.success('تمت الإضافة للسلة');
+                            toast.success(t('order_success'));
                           }
                         }}
-                        className="mt-2 w-full bg-zinc-900 text-white text-xs font-bold py-2 rounded-lg hover:bg-red-600 transition-colors flex items-center justify-center gap-2"
+                        className="mt-2 w-full bg-zinc-900 text-white text-xs font-bold py-2 rounded-lg hover:bg-red-600 transition-all flex items-center justify-center gap-2"
                       >
                         <ShoppingCart size={14} />
-                        <span>أضف للسلة</span>
+                        <span>{t('add_to_cart')}</span>
                       </button>
+
+
                     </div>
                   </div>
                 )}
@@ -240,9 +246,10 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
                     rel="noreferrer"
                     className="mt-4 flex items-center justify-center gap-2 bg-green-600 text-white py-3 rounded-2xl font-black text-sm hover:bg-green-700 transition-all shadow-lg shadow-green-100"
                   >
-                    <span>تأكيد الطلب عبر واتساب</span>
+                    <span>{t('confirm_whatsapp')}</span>
                     <ExternalLink size={18} />
                   </a>
+
                 )}
               </div>
             </div>
@@ -267,8 +274,9 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
                 <span className="w-2 h-2 bg-red-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
                 <span className="w-2 h-2 bg-red-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
               </div>
-              <p className="text-zinc-500 text-sm font-bold">محمد بيفكر...</p>
+              <p className="text-zinc-500 text-sm font-bold">{t('thinking')}</p>
             </div>
+
           </div>
         )}
         <div ref={messagesEndRef} />
@@ -318,10 +326,11 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="اسأل محمد أو ارفع صورة..."
+              placeholder={t('ask_placeholder')}
               className="w-full px-5 py-3.5 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-zinc-900 outline-none transition-all text-sm font-medium placeholder:text-gray-400 shadow-inner"
             />
           </div>
+
           
           <button
             type="submit"

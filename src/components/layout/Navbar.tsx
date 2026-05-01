@@ -10,18 +10,20 @@ import { useProductStore } from '../../store/productStore';
 import { useFavoriteStore } from '../../store/favoriteStore';
 import { ChangeNameModal, ChangePhoneModal } from '../ui/EditProfileModal';
 import SettingsSection from '../settings/SettingsSection';
+import { t } from '../../utils/i18n';
 import logo from '../../assets/logo.png';
+
 
 
 /* ─── Nav links: ONLY the required categories ──────────────────────────────── */
 const navLinks = [
-  { label: 'الرئيسية', href: '/' },
-  { label: 'العروض', href: '/offers' },
-  { label: 'الأجهزة الكهربائية', href: '/products?category=appliances' },
-  { label: 'لوازم المطابخ', href: '/products?category=kitchen' },
-  { label: 'الأثاث', href: '/products?category=furniture' },
-  { label: 'المفروشات', href: '/products?category=decor' },
-  { label: 'لوازم المنزل', href: '/products?category=home_supplies' },
+  { label: 'home', href: '/' },
+  { label: 'offers', href: '/offers' },
+  { label: 'appliances', href: '/products?category=appliances' },
+  { label: 'kitchen', href: '/products?category=kitchen' },
+  { label: 'furniture', href: '/products?category=furniture' },
+  { label: 'decor', href: '/products?category=decor' },
+  { label: 'home_supplies', href: '/products?category=home_supplies' },
 ];
 
 export default function Navbar() {
@@ -109,8 +111,9 @@ export default function Navbar() {
                   : 'text-zinc-300 hover:text-white hover:bg-zinc-800/60'
               }`}
             >
-              {link.label}
+              {t(link.label)}
             </Link>
+
           ))}
         </nav>
 
@@ -122,9 +125,10 @@ export default function Navbar() {
               type="text"
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
-              className="bg-zinc-800 text-white rounded-full px-4 py-1.5 pr-10 focus:outline-none focus:ring-2 focus:ring-red-600 border-none text-sm w-56 placeholder-zinc-400"
-              placeholder="ابحث عن منتج..."
+              className="bg-zinc-800 text-white rounded-full px-4 py-1.5 pr-10 focus:outline-none focus:ring-2 focus:ring-red-600 border-none text-sm w-56 placeholder-zinc-400 text-right"
+              placeholder={t('search_placeholder')}
             />
+
             <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 text-lg">search</span>
           </form>
 
@@ -190,8 +194,9 @@ export default function Navbar() {
                   className="flex items-center gap-3 px-4 py-2.5 hover:bg-red-50 text-gray-700 hover:text-red-600 transition-colors text-sm"
                 >
                   <UserCog size={16} />
-                  <span>تعديل البيانات</span>
+                  <span>{t('edit_data')}</span>
                 </Link>
+
                 <button
                   onClick={() => {
                     console.log('[Navbar] Change Name clicked');
@@ -201,8 +206,9 @@ export default function Navbar() {
                   className="flex items-center gap-3 px-4 py-2.5 hover:bg-red-50 text-gray-700 hover:text-red-600 transition-colors text-sm w-full"
                 >
                   <User size={16} />
-                  <span>تغيير الاسم</span>
+                  <span>{t('change_name')}</span>
                 </button>
+
                 <button
                   onClick={() => {
                     console.log('[Navbar] Change Phone clicked');
@@ -212,8 +218,9 @@ export default function Navbar() {
                   className="flex items-center gap-3 px-4 py-2.5 hover:bg-red-50 text-gray-700 hover:text-red-600 transition-colors text-sm w-full"
                 >
                   <Phone size={16} />
-                  <span>تغيير رقم الهاتف</span>
+                  <span>{t('change_phone')}</span>
                 </button>
+
 
                 <div className="border-t border-gray-100 my-1 bg-gray-50/50">
                   <SettingsSection isCompact />
@@ -226,8 +233,9 @@ export default function Navbar() {
                     className="flex items-center gap-3 px-4 py-2.5 hover:bg-red-50 text-red-600 transition-colors text-sm w-full"
                   >
                     <LogOut size={16} />
-                    <span>تسجيل الخروج</span>
+                    <span>{t('logout')}</span>
                   </button>
+
                   <button
                     onClick={() => { handleLogout(); navigate('/login'); }}
                     className="flex items-center gap-3 px-4 py-2.5 hover:bg-red-50 text-gray-700 hover:text-red-600 transition-colors text-sm w-full"
@@ -295,8 +303,9 @@ export default function Navbar() {
                 isActive(link.href) ? 'bg-zinc-800 text-red-500' : 'text-zinc-300 hover:bg-zinc-800 hover:text-white'
               }`}
             >
-              {link.label}
+              {t(link.label)}
             </Link>
+
           ))}
         </div>
       )}

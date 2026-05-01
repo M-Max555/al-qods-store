@@ -5,16 +5,18 @@ import {
   ShoppingBag, Package, PlusCircle,
   BarChart3, LogOut, Tag
 } from 'lucide-react';
+import { t } from '../utils/i18n';
+
 
 const MENU_ITEMS = [
-  { path: '/admin', icon: LayoutDashboard, label: 'الرئيسية' },
-  { path: '/admin/orders', icon: ShoppingBag, label: 'الطلبات' },
-  { path: '/admin/products', icon: Package, label: 'المنتجات' },
-  { path: '/admin/products/add', icon: PlusCircle, label: 'إضافة منتج' },
-  { path: '/admin/offers', icon: Tag, label: 'العروض' },
-  { path: '/admin/users', icon: Users, label: 'المستخدمين' },
-  { path: '/admin/admins', icon: ShieldAlert, label: 'المديرين' },
-  { path: '/admin/analytics', icon: BarChart3, label: 'التحليلات' },
+  { path: '/admin', icon: LayoutDashboard, label: 'admin_dashboard' },
+  { path: '/admin/orders', icon: ShoppingBag, label: 'orders' },
+  { path: '/admin/products', icon: Package, label: 'products' },
+  { path: '/admin/products/add', icon: PlusCircle, label: 'add_product' },
+  { path: '/admin/offers', icon: Tag, label: 'offers' },
+  { path: '/admin/users', icon: Users, label: 'users' },
+  { path: '/admin/admins', icon: ShieldAlert, label: 'admins' },
+  { path: '/admin/analytics', icon: BarChart3, label: 'analytics' },
 ];
 
 export default function AdminLayout() {
@@ -56,9 +58,10 @@ export default function AdminLayout() {
       {/* Sidebar */}
       <aside className="w-64 bg-white border-l border-gray-200 flex flex-col hidden md:flex sticky top-0 h-screen">
         <div className="p-6 border-b border-gray-100">
-          <h2 className="text-xl font-bold text-gray-900">لوحة التحكم</h2>
-          <p className="text-sm text-gray-500 mt-1">القدس للأجهزة المنزلية</p>
+          <h2 className="text-xl font-bold text-gray-900">{t('admin_dashboard')}</h2>
+          <p className="text-sm text-gray-500 mt-1">Al Quds Store</p>
         </div>
+
 
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
           {filteredMenuItems.map((item) => {
@@ -72,10 +75,14 @@ export default function AdminLayout() {
                   ? 'bg-red-50 text-red-600 font-semibold'
                   : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                   }`}
+
               >
+
                 <item.icon size={20} />
-                <span>{item.label}</span>
+                <span>{t(item.label)}</span>
               </Link>
+
+
             );
           })}
         </nav>
