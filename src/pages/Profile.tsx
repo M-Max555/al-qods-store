@@ -5,7 +5,9 @@ import { useAuthStore } from '../store/authStore';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase/firestore';
 import { ChangeNameModal, ChangePhoneModal } from '../components/ui/EditProfileModal';
+import SettingsSection from '../components/settings/SettingsSection';
 import { UserCog, Settings } from 'lucide-react';
+
 
 import toast from 'react-hot-toast';
 
@@ -72,44 +74,7 @@ export default function Profile() {
     );
   };
 
-  const handleLanguageChange = async (lang: 'ar' | 'en') => {
-    if (!user) return;
-    if (user.language === lang) return;
-    try {
-      const userRef = doc(db, 'users', user.id);
-      await updateDoc(userRef, { language: lang });
-      setUser({ ...user, language: lang });
-      localStorage.setItem('alquds_lang', lang);
 
-      toast.success(lang === 'ar' ? 'تم تغيير اللغة للعربية' : 'Language changed to English');
-      // In a real app, this would trigger i18n reload
-    } catch (err) {
-      toast.error('حدث خطأ أثناء تغيير اللغة');
-    }
-  };
-
-  const handleThemeChange = async (theme: 'light' | 'dark') => {
-    if (!user) return;
-    if (user.theme === theme) return;
-    try {
-      const userRef = doc(db, 'users', user.id);
-      await updateDoc(userRef, { theme });
-      setUser({ ...user, theme });
-      localStorage.setItem('alquds_theme', theme);
-
-      
-      // Apply theme instantly
-      if (theme === 'dark') {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-      }
-      
-      toast.success(theme === 'dark' ? 'تم تفعيل الوضع الليلي' : 'تم تفعيل الوضع النهاري');
-    } catch (err) {
-      toast.error('حدث خطأ أثناء تغيير المظهر');
-    }
-  };
 
 
   if (!user) return null;
@@ -236,85 +201,9 @@ export default function Profile() {
                 <Settings className="text-red-600" size={28} /> الإعدادات العامة
               </h2>
 
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Language Switch */}
-                <div className="p-5 bg-white border border-gray-100 rounded-3xl shadow-sm hover:border-red-100 transition-colors">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
-                        <span className="material-symbols-outlined">language</span>
-                      </div>
-                      <div>
-                        <p className="font-bold text-gray-900">اللغة</p>
-                        <p className="text-xs text-gray-500">اختر لغة الموقع</p>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <button 
-                      onClick={() => handleLanguageChange('ar')}
-                      className={`flex-1 py-2 rounded-xl text-sm font-bold transition-all ${
-                        (user.language || 'ar') === 'ar' 
-                        ? 'bg-red-600 text-white shadow-md' 
-                        : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
-                      }`}
-                    >
-                      العربية
-                    </button>
-                    <button 
-                      onClick={() => handleLanguageChange('en')}
-                      className={`flex-1 py-2 rounded-xl text-sm font-bold transition-all ${
-                        user.language === 'en' 
-                        ? 'bg-red-600 text-white shadow-md' 
-                        : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
-                      }`}
-                    >
-                      English
-                    </button>
-                  </div>
-                </div>
-
-                {/* Theme Switch */}
-                <div className="p-5 bg-white border border-gray-100 rounded-3xl shadow-sm hover:border-red-100 transition-colors">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center text-orange-600">
-                        <span className="material-symbols-outlined">
-                          {user.theme === 'dark' ? 'dark_mode' : 'light_mode'}
-                        </span>
-                      </div>
-                      <div>
-                        <p className="font-bold text-gray-900">المظهر</p>
-                        <p className="text-xs text-gray-500">الوضع الليلي / النهاري</p>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <button 
-                      onClick={() => handleThemeChange('light')}
-                      className={`flex-1 py-2 rounded-xl text-sm font-bold transition-all ${
-                        (user.theme || 'light') === 'light' 
-                        ? 'bg-zinc-900 text-white shadow-md' 
-                        : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
-                      }`}
-                    >
-                      نهاري
-                    </button>
-                    <button 
-                      onClick={() => handleThemeChange('dark')}
-                      className={`flex-1 py-2 rounded-xl text-sm font-bold transition-all ${
-                        user.theme === 'dark' 
-                        ? 'bg-zinc-900 text-white shadow-md' 
-                        : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
-                      }`}
-                    >
-                      ليلي
-                    </button>
-                  </div>
-                </div>
-              </div>
+              <SettingsSection />
             </div>
+
 
             <p className="text-center text-xs text-gray-400">
               * يتم حفظ إعداداتك تلقائياً وتطبيقها فوراً

@@ -9,7 +9,9 @@ import { useAuthStore } from '../../store/authStore';
 import { useProductStore } from '../../store/productStore';
 import { useFavoriteStore } from '../../store/favoriteStore';
 import { ChangeNameModal, ChangePhoneModal } from '../ui/EditProfileModal';
+import SettingsSection from '../settings/SettingsSection';
 import logo from '../../assets/logo.png';
+
 
 /* ─── Nav links: ONLY the required categories ──────────────────────────────── */
 const navLinks = [
@@ -212,6 +214,11 @@ export default function Navbar() {
                   <Phone size={16} />
                   <span>تغيير رقم الهاتف</span>
                 </button>
+
+                <div className="border-t border-gray-100 my-1 bg-gray-50/50">
+                  <SettingsSection isCompact />
+                </div>
+
 
                 <div className="border-t border-gray-100 mt-1 pt-1">
                   <button
