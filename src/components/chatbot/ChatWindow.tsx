@@ -127,8 +127,7 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
       <div className="bg-zinc-900 text-white p-5 flex items-center justify-between shadow-lg z-10">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-2xl overflow-hidden shadow-inner border border-white/20">
-            <img src="/assets/salesman.png" alt="محمد" className="w-full h-full object-cover" />
-
+            <img src="/assets/mohamed-avatar.png" alt="محمد" className="w-full h-full object-cover" />
           </div>
           <div>
             <h3 className="font-black text-xl leading-tight">{t('salesman_name')}</h3>
@@ -156,7 +155,7 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
           >
             {msg.role === 'assistant' && (
               <div className="w-10 h-10 rounded-2xl overflow-hidden border border-gray-100 flex-shrink-0 mt-1 shadow-sm">
-                <img src="/assets/salesman.png" alt="محمد" className="w-full h-full object-cover" />
+                <img src="/assets/mohamed-avatar.png" alt="محمد" className="w-full h-full object-cover" />
 
               </div>
             )}
@@ -265,7 +264,7 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
         {isLoading && (
           <div className="flex justify-end gap-3 animate-fade-in">
             <div className="w-10 h-10 rounded-2xl overflow-hidden border border-gray-100 flex-shrink-0 mt-1 shadow-sm">
-              <img src="/assets/salesman.png" alt="محمد" className="w-full h-full object-cover" />
+              <img src="/assets/mohamed-avatar.png" alt="محمد" className="w-full h-full object-cover" />
 
             </div>
             <div className="px-5 py-3.5 rounded-3xl bg-white border border-gray-100 shadow-sm rounded-tl-none flex items-center gap-3">
