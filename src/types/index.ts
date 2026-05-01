@@ -70,11 +70,14 @@ export interface User {
   email: string;
   phone: string;
   location: UserLocation;
-  role: 'user' | 'admin';
+  role: 'user' | 'admin' | 'owner';
+  language?: 'ar' | 'en';
+  theme?: 'light' | 'dark';
   coupon?: string;
   hasUsedCoupon: boolean;
   createdAt: string;
 }
+
 
 export interface LoginCredentials {
   email: string;
@@ -114,7 +117,9 @@ export interface Order {
   paymentStatus: 'unpaid' | 'paid' | 'refunded';
   address: string;
   phone: string;
+  location?: UserLocation;
   notes?: string;
+
   createdAt: string;
   updatedAt: string;
 }
@@ -165,3 +170,11 @@ export interface Offer {
   createdAt: string;
   expiresAt: string;
 }
+
+export interface Lead {
+  id?: string;
+  phone: string;
+  createdAt: string;
+  source: string;
+}
+

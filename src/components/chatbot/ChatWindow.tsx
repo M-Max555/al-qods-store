@@ -80,8 +80,10 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
         role: 'assistant' as const,
         content: response.content,
         product: response.product,
+        products: response.products,
         whatsapp: response.whatsapp
       };
+
       
       addMessage(assistantMessage);
     } catch (error) {
@@ -121,7 +123,8 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
       <div className="bg-zinc-900 text-white p-5 flex items-center justify-between shadow-lg z-10">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-2xl overflow-hidden shadow-inner border border-white/20">
-            <img src="/assets/mohamed-avatar.png" alt="محمد" className="w-full h-full object-cover" />
+            <img src="/assets/salesman.png" alt="محمد" className="w-full h-full object-cover" />
+
           </div>
           <div>
             <h3 className="font-black text-xl leading-tight">محمد مساعدك الشخصي</h3>
@@ -148,7 +151,8 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
           >
             {msg.role === 'assistant' && (
               <div className="w-10 h-10 rounded-2xl overflow-hidden border border-gray-100 flex-shrink-0 mt-1 shadow-sm">
-                <img src="/assets/mohamed-avatar.png" alt="محمد" className="w-full h-full object-cover" />
+                <img src="/assets/salesman.png" alt="محمد" className="w-full h-full object-cover" />
+
               </div>
             )}
             
@@ -165,8 +169,39 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
                 )}
                 {msg.content}
                 
-                {/* Product Metadata Display */}
-                {msg.product && (
+                {/* Products List Display (Req #10) */}
+                {msg.products && msg.products.length > 0 && (
+                  <div className="mt-4 space-y-3 animate-slide-up">
+                    {msg.products.map((p: any, i: number) => (
+                      <div key={i} className="bg-gray-50 rounded-2xl p-3 border border-gray-100 flex gap-4 items-center">
+                        <img src={p.image || 'https://via.placeholder.com/80'} alt={p.name} className="w-16 h-16 rounded-xl object-cover shadow-sm bg-white" />
+                        <div className="flex-1 min-w-0 text-right">
+                          <h4 className="text-sm font-black text-gray-900 truncate">{p.name}</h4>
+                          <p className="text-red-600 font-black text-sm mt-0.5">{formatPrice(p.price || 0)}</p>
+                          <button 
+                            onClick={() => {
+                              addItem({ 
+                                id: p.id || Date.now().toString() + i, 
+                                nameAr: p.name, 
+                                finalPrice: p.price, 
+                                images: [p.image],
+                                stock: 10
+                              } as any);
+                              toast.success('تمت الإضافة للسلة');
+                            }}
+                            className="mt-1 text-zinc-900 text-[10px] font-bold hover:text-red-600 transition-colors flex items-center gap-1"
+                          >
+                            <ShoppingCart size={12} />
+                            <span>أضف للسلة</span>
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Legacy single product support */}
+                {msg.product && (!msg.products || msg.products.length === 0) && (
                   <div className="mt-4 bg-gray-50 rounded-2xl p-3 border border-gray-100 flex gap-4 items-center animate-slide-up">
                     <img src={msg.product?.image || 'https://via.placeholder.com/80'} alt={msg.product?.name} className="w-20 h-20 rounded-xl object-cover shadow-sm bg-white" />
                     <div className="flex-1 min-w-0">
@@ -182,6 +217,7 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
                               images: [msg.product.image],
                               stock: 10
                             } as any);
+                            toast.success('تمت الإضافة للسلة');
                           }
                         }}
                         className="mt-2 w-full bg-zinc-900 text-white text-xs font-bold py-2 rounded-lg hover:bg-red-600 transition-colors flex items-center justify-center gap-2"
@@ -192,6 +228,7 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
                     </div>
                   </div>
                 )}
+
 
                 {/* WhatsApp Redirect Button (Manual Trigger) */}
                 {msg.whatsapp && (
@@ -219,7 +256,8 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
         {isLoading && (
           <div className="flex justify-end gap-3 animate-fade-in">
             <div className="w-10 h-10 rounded-2xl overflow-hidden border border-gray-100 flex-shrink-0 mt-1 shadow-sm">
-              <img src="/assets/mohamed-avatar.png" alt="محمد" className="w-full h-full object-cover" />
+              <img src="/assets/salesman.png" alt="محمد" className="w-full h-full object-cover" />
+
             </div>
             <div className="px-5 py-3.5 rounded-3xl bg-white border border-gray-100 shadow-sm rounded-tl-none flex items-center gap-3">
               <div className="flex gap-1">

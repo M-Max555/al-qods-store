@@ -16,8 +16,10 @@ export const chatService = {
       return { 
         content: data.reply || "في مشكلة بسيطة 😅 جرب تاني", 
         product: data.product,
+        products: data.products || [],
         whatsapp: data.whatsapp
       };
+
     } catch (error) {
       console.error('Chat Service Error:', error);
       return { 

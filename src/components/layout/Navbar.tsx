@@ -175,7 +175,8 @@ export default function Navbar() {
 
             {/* ─── User Dropdown (Req #7) ─── */}
             {isUserMenuOpen && (
-              <div className="absolute left-0 top-full mt-2 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 animate-slide-down z-50">
+              <div className="absolute -left-12 sm:left-0 top-full mt-3 w-[calc(100vw-32px)] sm:w-64 bg-white rounded-2xl shadow-2xl border border-gray-100 py-2 animate-slide-down z-50 max-h-[70vh] overflow-y-auto">
+
                 <div className="px-4 py-3 border-b border-gray-100">
                   <p className="font-semibold text-gray-900 text-sm">{user?.name}</p>
                   <p className="text-gray-500 text-xs mt-0.5">{user?.phone || user?.email}</p>

@@ -37,8 +37,28 @@ export const offerService = {
 
   async addOffer(offer: Omit<Offer, 'id'>): Promise<Offer> {
     const docRef = await addDoc(collection(db, COLLECTION_NAME), offer);
-    return { id: docRef.id, ...offer };
+    const newOffer = { id: docRef.id, ...offer };
+
+    // Part 1.3: WhatsApp Automation - Notify all leads
+    try {
+      const leadsSnapshot = await getDocs(collection(db, 'leads'));
+      const leads = leadsSnapshot.docs.map(doc => doc.data());
+      
+      const message = `🔥 عرض جديد من معرض القدس:
+${offer.title}
+${offer.description}
+خصم يصل إلى ${offer.discountPercentage}%!
+شاهد التفاصيل الآن: https://alquds-store.web.app/offers`;
+
+      console.log(`[Automation] Notifying ${leads.length} leads about new offer.`);
+      // In a real system, we'd trigger a bulk WhatsApp API here
+    } catch (err) {
+      console.error('Error notifying leads:', err);
+    }
+
+    return newOffer;
   },
+
 
   async updateOffer(id: string, updates: Partial<Offer>): Promise<void> {
     const docRef = doc(db, COLLECTION_NAME, id);

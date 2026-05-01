@@ -54,11 +54,27 @@ export default function App() {
     // Fetch active offers globally
     fetchActiveOffers();
     
+    // Apply saved theme and language
+    const savedTheme = localStorage.getItem('alquds_theme');
+    const savedLang = localStorage.getItem('alquds_lang');
+    
+    if (savedTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+    }
+    
+    if (savedLang === 'en') {
+      document.documentElement.setAttribute('dir', 'ltr');
+      document.documentElement.classList.add('lang-en');
+    } else {
+      document.documentElement.setAttribute('dir', 'rtl');
+    }
+
     // Run the seed to populate DB on first load (it will skip if already populated)
     seedFirestore();
 
     return () => unsubscribe();
   }, [initAuth, fetchActiveOffers]);
+
 
   return (
     <BrowserRouter>

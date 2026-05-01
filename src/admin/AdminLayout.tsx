@@ -18,7 +18,8 @@ const MENU_ITEMS = [
 ];
 
 export default function AdminLayout() {
-  const { user, logout, isInitialized } = useAuthStore();
+  const { user, logout, isInitialized, isOwner, isAdmin } = useAuthStore();
+
   const location = useLocation();
 
   if (!isInitialized) {
@@ -29,7 +30,7 @@ export default function AdminLayout() {
     );
   }
 
-  if (!user || user.role !== 'admin') {
+  if (!user || !isAdmin()) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4 text-center space-y-4">
         <ShieldAlert size={64} className="text-red-500" />
@@ -42,6 +43,14 @@ export default function AdminLayout() {
     );
   }
 
+  const filteredMenuItems = MENU_ITEMS.filter(item => {
+    if (isOwner()) return true;
+    // Admins cannot access users or other admins
+    if (item.path === '/admin/users' || item.path === '/admin/admins') return false;
+    return true;
+  });
+
+
   return (
     <div className="min-h-screen bg-gray-50 flex" dir="rtl">
       {/* Sidebar */}
@@ -52,8 +61,9 @@ export default function AdminLayout() {
         </div>
 
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-          {MENU_ITEMS.map((item) => {
+          {filteredMenuItems.map((item) => {
             const isActive = location.pathname === item.path || (item.path !== '/admin' && location.pathname.startsWith(item.path));
+
             return (
               <Link
                 key={item.path}

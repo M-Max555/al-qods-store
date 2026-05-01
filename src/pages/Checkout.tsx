@@ -29,8 +29,12 @@ export default function Checkout() {
   const [couponInput, setCouponInput] = useState('');
   const [isValidating, setIsValidating] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDetecting, setIsDetecting] = useState(false);
   const [address, setAddress] = useState(user?.location?.address || "");
+  const [lat, setLat] = useState<number | null>(user?.location?.lat || null);
+  const [lng, setLng] = useState<number | null>(user?.location?.lng || null);
   const [phone, setPhone] = useState(user?.phone || "");
+
 
   const subtotal = getSubtotal();
   const shipping = getShippingCost();
@@ -73,6 +77,46 @@ export default function Checkout() {
     }
   };
 
+  const handleDetectLocation = () => {
+    if (!navigator.geolocation) {
+      toast.error("متصفحك لا يدعم تحديد الموقع");
+      return;
+    }
+
+    setIsDetecting(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        setLat(latitude);
+        setLng(longitude);
+        try {
+          const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+          const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${apiKey}&language=ar`;
+          
+          const res = await fetch(url);
+          const data = await res.json();
+          
+          if (data.status === 'OK' && data.results.length > 0) {
+            const formattedAddress = data.results[0].formatted_address;
+            setAddress(formattedAddress);
+            toast.success("تم تحديد الموقع بنجاح");
+          } else {
+            toast.error("تعذر تحويل الموقع لعنوان نصي، يرجى كتابة العنوان يدوياً");
+          }
+        } catch (err) {
+          toast.error("فشل في تحديد العنوان النصي");
+        } finally {
+          setIsDetecting(false);
+        }
+      },
+      (_error) => {
+        setIsDetecting(false);
+        toast.error("يرجى تفعيل صلاحية الوصول للموقع");
+      }
+    );
+  };
+
+
   const handleSubmitOrder = async () => {
     if (!user) return;
     if (!address.trim()) {
@@ -103,7 +147,9 @@ export default function Checkout() {
         paymentStatus: 'unpaid',
         address: address.trim(),
         phone: phone.trim(),
+        location: lat && lng ? { lat, lng, address: address.trim() } : undefined
       });
+
 
       // Mark coupon as used if applied
       if (couponCode) {
@@ -183,15 +229,30 @@ ${productLines}
                     />
                   </div>
                   <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                    <label className="text-xs text-gray-400 mb-1 block">عنوان التوصيل بالتفصيل *</label>
-                    <input
-                      type="text"
+                    <label className="text-xs text-gray-400 mb-3 block">رجاء اختيار المكان الذي سيتم التوصيل إليه *</label>
+                    <button
+                      type="button"
+                      onClick={handleDetectLocation}
+                      disabled={isDetecting}
+                      className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-white border-2 border-red-100 text-red-600 rounded-xl hover:bg-red-50 transition-all font-bold text-sm mb-4 shadow-sm"
+                    >
+                      {isDetecting ? <Loader2 size={18} className="animate-spin" /> : <MapPin size={18} />}
+                      <span>تحديد موقعي الحالي</span>
+                    </button>
+                    <textarea
                       value={address}
                       onChange={(e) => setAddress(e.target.value)}
                       placeholder="العنوان بالتفصيل (المدينة - الشارع - رقم البيت)"
-                      className="w-full bg-transparent font-bold text-gray-900 outline-none placeholder:text-gray-300 leading-relaxed"
+                      className="w-full bg-transparent font-bold text-gray-900 outline-none placeholder:text-gray-300 leading-relaxed resize-none border-t border-gray-100 pt-3 mt-1"
+                      rows={2}
                     />
+                    {(lat && lng) && (
+                      <div className="mt-2 text-[10px] text-gray-400 font-mono">
+                        Coordinates: {lat.toFixed(6)}, {lng.toFixed(6)}
+                      </div>
+                    )}
                   </div>
+
                 </div>
               </div>
             </div>

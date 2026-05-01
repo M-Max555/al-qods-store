@@ -20,7 +20,9 @@ interface AuthState {
   // Computed
   isAuthenticated: () => boolean;
   isAdmin: () => boolean;
+  isOwner: () => boolean;
 }
+
 
 export const useAuthStore = create<AuthState>()(
   (set, get) => ({
@@ -86,6 +88,8 @@ export const useAuthStore = create<AuthState>()(
     },
 
     isAuthenticated: () => !!get().user,
-    isAdmin: () => get().user?.role === 'admin',
+    isAdmin: () => get().user?.role === 'admin' || get().user?.role === 'owner',
+    isOwner: () => get().user?.role === 'owner',
   })
 );
+

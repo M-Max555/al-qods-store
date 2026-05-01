@@ -2,6 +2,7 @@ import {
   collection, doc, getDocs, 
   addDoc, updateDoc, query, where, orderBy 
 } from 'firebase/firestore';
+
 import { db } from '../firestore';
 import type { Order, OrderStatusType } from '../../types';
 
@@ -49,5 +50,31 @@ export const orderService = {
       status,
       updatedAt: new Date().toISOString()
     });
+
+    // Part 12: Order Status Automation
+    const snapshot = await getDocs(query(collection(db, COLLECTION_NAME), where('orderId', '==', orderId)));
+    if (snapshot.empty) return;
+    const order = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() } as Order;
+    
+    let message = '';
+    switch (status) {
+      case 'pending': message = 'تم استلام طلبك بنجاح وجاري مراجعته'; break;
+      case 'processing': message = 'جار تجهيز طلبك الآن في معرض القدس 📦'; break;
+      case 'shipped': 
+        message = `طلبك في الطريق 🚚\nموقع التوصيل: https://www.google.com/maps?q=${order.location?.lat},${order.location?.lng}`; 
+        break;
+      case 'delivered': message = 'تم تسليم طلبك بنجاح! نرجو تقييم تجربتك معنا (1-5) ⭐'; break;
+      case 'cancelled': message = 'نعتذر منك، تم إلغاء طلبك. نتمنى خدمتك في المرة القادمة.'; break;
+    }
+
+    if (message && order.phone) {
+      const encodedMsg = encodeURIComponent(message);
+      const waLink = `https://wa.me/${order.phone.startsWith('0') ? '2' + order.phone : order.phone}?text=${encodedMsg}`;
+      // In a real automated system, this would be an API call. 
+      // For now, we log it and providing the link for admin if needed.
+      console.log(`[Notification] Status: ${status}, Link: ${waLink}`);
+      // For immediate feedback in admin UI, we could trigger a window.open or toast
+    }
   }
+
 };

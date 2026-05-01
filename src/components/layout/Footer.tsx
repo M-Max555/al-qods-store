@@ -111,9 +111,15 @@ export default function Footer() {
       </div>
 
       {/* Bottom Bar */}
-      <div className="max-w-7xl mx-auto mt-12 pt-8 border-t border-zinc-200 text-center text-zinc-400 text-xs">
-        © {new Date().getFullYear()} القدس للأجهزة المنزلية. جميع الحقوق محفوظة.
+      <div className="max-w-7xl mx-auto mt-12 pt-8 border-t border-zinc-200 text-center">
+        <p className="text-zinc-400 text-xs mb-1">
+          © 2026 القدس للأجهزة المنزلية. جميع الحقوق محفوظة.
+        </p>
+        <p className="text-zinc-500 font-bold text-[10px] tracking-widest uppercase">
+          تطوير بواسطة <span className="text-red-600">ARCAN</span>
+        </p>
       </div>
+
 
       {/* ─── Branch Modal (Req #6E) ─── */}
       {showBranch && (

@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, ChevronLeft, ChevronRight, Zap } from 'lucide-react';
 import { useProductStore } from '../store/productStore';
+import { leadService } from '../firebase/services/leadService';
+
 import ProductCard from '../components/ui/ProductCard';
 import { ProductGridSkeleton } from '../components/ui/LoadingSpinner';
 
@@ -60,6 +62,26 @@ export default function Home() {
   const [activeBanner, setActiveBanner] = useState(0);
   const navigate = useNavigate();
   const { products, isLoading, fetchProducts, clearFilters } = useProductStore();
+
+  const [leadPhone, setLeadPhone] = useState('');
+  const [isSubmittingLead, setIsSubmittingLead] = useState(false);
+  const [leadMessage, setLeadMessage] = useState('');
+
+  const handleLeadSubmit = async () => {
+    if (!leadPhone) {
+      setLeadMessage('يرجى إدخال رقم الهاتف');
+      return;
+    }
+    setIsSubmittingLead(true);
+    setLeadMessage('');
+    const result = await leadService.saveLead(leadPhone);
+    setLeadMessage(result.message);
+    setIsSubmittingLead(false);
+    if (result.success) {
+      setLeadPhone('');
+    }
+  };
+
 
   useEffect(() => {
     clearFilters();
@@ -303,23 +325,35 @@ export default function Home() {
 
       {/* ─── Req #5: CTA — "احصل على عرضك الآن" (sales-focused) ────────── */}
       <section className="py-12 bg-red-600">
-        <div className="page-container">
+        <div className="page-container px-4">
           <div className="text-center max-w-xl mx-auto">
             <h2 className="text-2xl md:text-3xl font-black text-white mb-2">احصل على عرضك الآن</h2>
             <p className="text-red-100 mb-6 text-sm">أدخل رقم هاتفك وسنتواصل معك بأفضل العروض والأسعار الحصرية</p>
-            <div className="flex gap-2 max-w-md mx-auto">
+            <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
               <input
                 type="tel"
-                placeholder="أدخل رقم هاتفك"
+                value={leadPhone}
+                onChange={(e) => setLeadPhone(e.target.value)}
+                placeholder="أدخل رقم هاتفك (مثال: 01012345678)"
                 className="flex-1 bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl px-4 py-3 text-white placeholder-red-200 focus:outline-none focus:border-white text-sm"
               />
-              <button className="bg-white text-red-700 hover:bg-red-50 font-bold px-5 py-3 rounded-xl transition-all active:scale-95 text-sm whitespace-nowrap">
-                أرسل الآن
+              <button 
+                onClick={handleLeadSubmit}
+                disabled={isSubmittingLead}
+                className="w-full sm:w-auto bg-white text-red-700 hover:bg-red-50 font-bold px-8 py-3 rounded-xl transition-all active:scale-95 text-sm whitespace-nowrap disabled:opacity-70 disabled:cursor-not-allowed shadow-lg"
+              >
+                {isSubmittingLead ? 'جاري الإرسال...' : 'أرسل الآن'}
               </button>
             </div>
+            {leadMessage && (
+              <p className={`mt-4 text-sm font-bold ${leadMessage.includes('بنجاح') || leadMessage.includes('بالفعل') ? 'text-green-300' : 'text-yellow-300 animate-shake'}`}>
+                {leadMessage}
+              </p>
+            )}
           </div>
         </div>
       </section>
+
     </div>
   );
 }
