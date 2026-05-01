@@ -86,6 +86,27 @@ export default function OfferFormPage() {
     );
   };
 
+  const sendWhatsAppBroadcast = async (offerTitle: string, discount: number) => {
+    try {
+      const response = await fetch('/api/send-offer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          offerTitle,
+          discount,
+          offerUrl: window.location.origin + '/offers'
+        })
+      });
+      const data = await response.json();
+      if (data.success) {
+        toast.success('تم إرسال العرض لجميع العملاء عبر واتساب 📢');
+      }
+    } catch (err) {
+      console.error("Failed to send broadcast:", err);
+      toast.error("فشل إرسال التنبيهات عبر واتساب");
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.title.trim()) {
@@ -113,15 +134,11 @@ export default function OfferFormPage() {
     try {
       let imageUrl = imagePreview;
 
-      // Upload new image if selected (Cloudinary)
       if (imageFile) {
         try {
-          console.log("Uploading image to Cloudinary...");
           imageUrl = await uploadImageToCloudinary(imageFile);
-          console.log("Upload done. URL:", imageUrl);
         } catch (uploadError: any) {
-          console.error("فشل رفع الصورة:", uploadError);
-          toast.error("فشل رفع الصورة، سيتم الحفظ بدون صورة");
+          toast.error("فشل رفع الصورة");
         }
       }
 
@@ -145,12 +162,16 @@ export default function OfferFormPage() {
           createdAt: new Date().toISOString()
         });
         toast.success('تم إنشاء العرض بنجاح 👌');
+        
+        // Auto-Broadcast for NEW offers
+        if (formData.isActive) {
+           sendWhatsAppBroadcast(formData.title, formData.discountPercentage);
+        }
       }
       
       navigate('/admin/offers');
     } catch (error) {
       toast.error(isEdit ? 'حدث خطأ أثناء تحديث العرض' : 'حدث خطأ أثناء حفظ العرض');
-      console.error(error);
     } finally {
       setIsSubmitting(false);
     }
@@ -317,20 +338,33 @@ export default function OfferFormPage() {
           </div>
         </div>
 
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="w-full bg-red-600 text-white font-bold py-4 rounded-xl hover:bg-red-700 transition-colors disabled:opacity-70 flex justify-center items-center gap-2 text-lg shadow-lg shadow-red-200 mt-8"
-        >
-          {isSubmitting ? (
-           <>
-              <Loader2 className="animate-spin" size={24} />
-              <span>جاري الحفظ...</span>
-            </>
-          ) : (
-            <span>{isEdit ? 'تحديث العرض' : 'إصدار العرض'}</span>
+        <div className="flex flex-col md:flex-row gap-4 mt-8">
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="flex-1 bg-zinc-900 text-white font-black py-4 rounded-2xl hover:bg-red-600 transition-all disabled:opacity-70 flex justify-center items-center gap-2 text-lg shadow-xl"
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="animate-spin" size={24} />
+                <span>جاري الحفظ...</span>
+              </>
+            ) : (
+              <span>{isEdit ? 'تحديث العرض وحفظ التعديلات' : 'إنشاء ونشر العرض'}</span>
+            )}
+          </button>
+
+          {isEdit && (
+            <button
+              type="button"
+              onClick={() => sendWhatsAppBroadcast(formData.title, formData.discountPercentage)}
+              className="md:w-auto px-8 bg-green-600 text-white font-black py-4 rounded-2xl hover:bg-green-700 transition-all flex justify-center items-center gap-2 shadow-xl"
+            >
+              <span>إرسال تنبيه واتساب الآن</span>
+              📢
+            </button>
           )}
-        </button>
+        </div>
 
       </form>
     </div>

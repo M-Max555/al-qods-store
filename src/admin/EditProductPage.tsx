@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { productService } from '../firebase/services/productService';
 import { uploadImageToCloudinary } from '../utils/cloudinary';
 import toast from 'react-hot-toast';
-import { Upload, ArrowRight, Loader2 } from 'lucide-react';
+import { Upload, ArrowRight, Loader2, X, Image as ImageIcon } from 'lucide-react';
 
 import { CATEGORY_OPTIONS, mapOldCategoryToKey } from '../constants/categories';
 
@@ -12,8 +12,10 @@ export default function EditProductPage() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string>('');
+  
+  // Mix of strings (existing URLs) and Files (newly uploaded)
+  const [images, setImages] = useState<(string | File)[]>([]);
+  const [previews, setPreviews] = useState<string[]>([]);
 
   const [formData, setFormData] = useState({
     nameAr: '',
@@ -57,12 +59,13 @@ export default function EditProductPage() {
         warranty: product.warranty || 'ضمان سنتين من الوكيل المعتمد',
         returnPolicy: product.returnPolicy || 'إمكانية الاستبدال أو الاسترجاع خلال 14 يوم',
       });
-      if (product.images && product.images.length > 0) {
-        setImagePreview(product.images[0]);
+      
+      if (product.images) {
+        setImages(product.images);
+        setPreviews(product.images);
       }
     } catch (error) {
       toast.error('حدث خطأ أثناء تحميل بيانات المنتج');
-      console.error(error);
       navigate('/admin/products');
     } finally {
       setIsLoading(false);
@@ -72,11 +75,31 @@ export default function EditProductPage() {
   const finalPrice = Math.max(0, formData.price - (formData.price * formData.discount) / 100);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setImageFile(file);
-      setImagePreview(URL.createObjectURL(file));
+    if (e.target.files) {
+      const files = Array.from(e.target.files);
+      if (images.length + files.length > 5) {
+        toast.error('أقصى عدد للصور هو 5 صور');
+        return;
+      }
+
+      setImages([...images, ...files]);
+      setPreviews([...previews, ...files.map(file => URL.createObjectURL(file))]);
     }
+  };
+
+  const removeImage = (index: number) => {
+    const newImages = [...images];
+    const newPreviews = [...previews];
+    
+    if (typeof newPreviews[index] === 'string' && newPreviews[index].startsWith('blob:')) {
+      URL.revokeObjectURL(newPreviews[index]);
+    }
+    
+    newImages.splice(index, 1);
+    newPreviews.splice(index, 1);
+    
+    setImages(newImages);
+    setPreviews(newPreviews);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -87,41 +110,42 @@ export default function EditProductPage() {
       toast.error('يرجى إدخال اسم المنتج');
       return;
     }
-    if (formData.price < 0) {
-      toast.error('السعر لا يمكن أن يكون سالباً');
+    if (images.length === 0) {
+      toast.error('يرجى إضافة صورة واحدة على الأقل');
       return;
     }
 
     setIsSubmitting(true);
     try {
-      let imageUrl = imagePreview;
-
-      // Upload new image if selected (Cloudinary)
-      if (imageFile) {
-        try {
-          console.log("Uploading image to Cloudinary...");
-          imageUrl = await uploadImageToCloudinary(imageFile);
-          console.log("Upload done. URL:", imageUrl);
-        } catch (uploadError: any) {
-          console.error("فشل رفع الصورة:", uploadError);
-          toast.error("فشل رفع الصورة، سيتم استخدام الصورة القديمة أو الحفظ بدونها");
+      const finalUrls: string[] = [];
+      
+      for (const img of images) {
+        if (typeof img === 'string') {
+          finalUrls.push(img); // Already uploaded
+        } else {
+          // New file to upload
+          try {
+            const url = await uploadImageToCloudinary(img);
+            finalUrls.push(url);
+          } catch (err) {
+            console.error("Failed to upload image:", err);
+          }
         }
       }
 
-      // Update Product
       await productService.updateProduct(id, {
         ...formData,
-        name: formData.nameAr, // fallback if not provided
+        name: formData.nameAr,
         description: formData.descriptionAr,
-        images: [imageUrl],
-        finalPrice
+        images: finalUrls,
+        finalPrice,
+        updatedAt: new Date().toISOString()
       });
 
       toast.success('تم تحديث المنتج بنجاح 👌');
       navigate('/admin/products');
     } catch (error) {
       toast.error('حدث خطأ أثناء تحديث المنتج');
-      console.error(error);
     } finally {
       setIsSubmitting(false);
     }
@@ -136,7 +160,7 @@ export default function EditProductPage() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
+    <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">تعديل المنتج</h1>
         <button 
@@ -188,39 +212,8 @@ export default function EditProductPage() {
           />
         </div>
 
-        {/* High Conversion Details */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t border-gray-100">
-          <div className="space-y-2">
-            <label className="text-sm font-semibold text-gray-700">تفاصيل الشحن</label>
-            <input
-              type="text"
-              value={formData.shippingDetails}
-              onChange={(e) => setFormData({...formData, shippingDetails: e.target.value})}
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-red-500 focus:ring-2 focus:ring-red-200 outline-none"
-            />
-          </div>
-          <div className="space-y-2">
-            <label className="text-sm font-semibold text-gray-700">الضمان</label>
-            <input
-              type="text"
-              value={formData.warranty}
-              onChange={(e) => setFormData({...formData, warranty: e.target.value})}
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-red-500 focus:ring-2 focus:ring-red-200 outline-none"
-            />
-          </div>
-          <div className="space-y-2">
-            <label className="text-sm font-semibold text-gray-700">سياسة الاسترجاع</label>
-            <input
-              type="text"
-              value={formData.returnPolicy}
-              onChange={(e) => setFormData({...formData, returnPolicy: e.target.value})}
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-red-500 focus:ring-2 focus:ring-red-200 outline-none"
-            />
-          </div>
-        </div>
-
         {/* Pricing & Stock */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t border-gray-100">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 pt-4 border-t border-gray-100">
           <div className="space-y-2">
             <label className="text-sm font-semibold text-gray-700">السعر الأساسي *</label>
             <input
@@ -246,16 +239,6 @@ export default function EditProductPage() {
           </div>
           
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-gray-700">السعر النهائي</label>
-            <input
-              type="number"
-              disabled
-              value={finalPrice}
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-500 font-bold outline-none"
-            />
-          </div>
-
-          <div className="space-y-2">
             <label className="text-sm font-semibold text-gray-700">المخزون المتوفر *</label>
             <input
               type="number"
@@ -268,59 +251,48 @@ export default function EditProductPage() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-gray-700">رمز المنتج (SKU)</label>
-            <input
-              type="text"
-              value={formData.sku}
-              onChange={(e) => setFormData({...formData, sku: e.target.value})}
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-red-500 focus:ring-2 focus:ring-red-200 outline-none"
-            />
+            <label className="text-sm font-semibold text-gray-700">السعر النهائي</label>
+            <div className="px-4 py-2.5 rounded-xl border border-gray-100 bg-gray-50 text-red-600 font-black text-center">
+              {finalPrice.toLocaleString()} ج.م
+            </div>
           </div>
         </div>
 
-        {/* Status Toggles */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-gray-100">
-          <label className="flex items-center gap-3 cursor-pointer p-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">
-            <input 
-              type="checkbox" 
-              checked={formData.isFeatured}
-              onChange={(e) => setFormData({...formData, isFeatured: e.target.checked})}
-              className="w-5 h-5 text-red-600 rounded border-gray-300 focus:ring-red-500" 
-            />
-            <div>
-              <span className="font-semibold text-gray-700 block">منتج مميز (Featured)</span>
-              <span className="text-xs text-gray-500">يظهر في الصفحة الرئيسية</span>
-            </div>
-          </label>
-
-          <label className="flex items-center gap-3 cursor-pointer p-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">
-            <input 
-              type="checkbox" 
-              checked={formData.isOffer}
-              onChange={(e) => setFormData({...formData, isOffer: e.target.checked})}
-              className="w-5 h-5 text-red-600 rounded border-gray-300 focus:ring-red-500" 
-            />
-            <div>
-              <span className="font-semibold text-gray-700 block">عرض خاص (Offer)</span>
-              <span className="text-xs text-gray-500">يظهر تلقائياً في قسم العروض</span>
-            </div>
-          </label>
-        </div>
-
-        {/* Image Upload */}
-        <div className="pt-4 border-t border-gray-100">
-          <label className="text-sm font-semibold text-gray-700 block mb-2">صورة المنتج</label>
-          <div className="flex items-center gap-6">
-            <label className="cursor-pointer flex-1 border-2 border-dashed border-gray-300 rounded-2xl p-8 hover:bg-gray-50 hover:border-red-400 transition-colors flex flex-col items-center justify-center gap-2">
-              <Upload size={32} className="text-gray-400" />
-              <span className="text-gray-600 font-medium">اضغط لتغيير الصورة</span>
-              <span className="text-xs text-gray-400">PNG, JPG up to 5MB</span>
-              <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+        {/* Image Upload System */}
+        <div className="pt-4 border-t border-gray-100 space-y-4">
+          <div className="flex items-center justify-between">
+            <label className="text-sm font-bold text-gray-900 flex items-center gap-2">
+              <ImageIcon size={18} className="text-red-600" />
+              <span>صور المنتج (حتى 5 صور) *</span>
             </label>
-            {imagePreview && (
-              <div className="w-40 h-40 rounded-2xl border border-gray-200 overflow-hidden relative">
-                <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+            <span className="text-xs text-gray-500">{images.length} / 5</span>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+            {previews.map((preview, index) => (
+              <div key={index} className="aspect-square rounded-2xl border border-gray-200 overflow-hidden relative group shadow-sm hover:shadow-md transition-all">
+                <img src={preview} alt={`Preview ${index}`} className="w-full h-full object-cover" />
+                <button
+                  type="button"
+                  onClick={() => removeImage(index)}
+                  className="absolute top-2 right-2 bg-white/90 hover:bg-red-600 hover:text-white text-gray-600 p-1.5 rounded-lg shadow-lg transition-all"
+                >
+                  <X size={14} />
+                </button>
+                {index === 0 && (
+                  <div className="absolute bottom-0 left-0 right-0 bg-zinc-900/80 text-white text-[10px] py-1 text-center font-bold">
+                    الصورة الرئيسية
+                  </div>
+                )}
               </div>
+            ))}
+            
+            {images.length < 5 && (
+              <label className="aspect-square cursor-pointer border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center gap-2 hover:bg-gray-50 hover:border-red-400 transition-all text-gray-400 hover:text-red-600">
+                <Upload size={24} />
+                <span className="text-[10px] font-bold">إضافة صورة</span>
+                <input type="file" accept="image/*" multiple onChange={handleImageChange} className="hidden" />
+              </label>
             )}
           </div>
         </div>
@@ -328,15 +300,15 @@ export default function EditProductPage() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-70 flex justify-center items-center gap-2"
+          className="w-full bg-zinc-900 text-white font-bold py-4 rounded-2xl hover:bg-red-600 transition-all disabled:opacity-70 flex justify-center items-center gap-2 shadow-xl active:scale-[0.98]"
         >
           {isSubmitting ? (
-           <>
-              <Loader2 className="animate-spin" size={20} />
-              <span>جاري التحديث...</span>
+            <>
+              <Loader2 className="animate-spin" size={24} />
+              <span>جاري تحديث الصور والبيانات...</span>
             </>
           ) : (
-            <span>تحديث المنتج</span>
+            <span>تحديث ونشر التعديلات</span>
           )}
         </button>
 
@@ -344,3 +316,4 @@ export default function EditProductPage() {
     </div>
   );
 }
+

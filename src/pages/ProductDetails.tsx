@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
   Heart, ShoppingCart, Star, Check, 
-  ShieldCheck, Truck, RefreshCcw, Loader2 
+  ShieldCheck, Truck, RefreshCcw, Loader2,
+  ArrowRight
 } from 'lucide-react';
 import { productService } from '../firebase/services/productService';
 import { useCartStore } from '../store/cartStore';
@@ -95,37 +96,73 @@ export default function ProductDetails() {
       ]} />
 
       <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-12">
-        {/* Images Section */}
+        {/* Images Section (Amazon/Premium Style) */}
         <div className="space-y-4">
-          <div className="aspect-square rounded-3xl overflow-hidden bg-gray-100 border border-gray-100 shadow-sm relative group">
-            <img 
-              src={product.images[activeImage]} 
-              alt={product.nameAr}
-              className="w-full h-full object-cover"
-            />
-            {product.discount > 0 && (
-              <span className="absolute top-6 right-6 bg-red-600 text-white font-black px-4 py-1.5 rounded-2xl shadow-lg">
-                خصم {product.discount}%
-              </span>
+          <div className="aspect-square rounded-3xl overflow-hidden bg-white border border-gray-100 shadow-xl relative group">
+            {/* Main Image with Zoom-like transition */}
+            <div className="w-full h-full relative overflow-hidden">
+               <img 
+                key={activeImage}
+                src={product.images[activeImage]} 
+                alt={product.nameAr}
+                className="w-full h-full object-contain p-4 transition-all duration-700 ease-in-out transform hover:scale-110"
+              />
+            </div>
+            
+            {/* Badges */}
+            <div className="absolute top-6 right-6 flex flex-col gap-2">
+              {product.discount > 0 && (
+                <span className="bg-red-600 text-white font-black px-4 py-1.5 rounded-2xl shadow-lg animate-bounce">
+                  خصم {product.discount}%
+                </span>
+              )}
+              {product.isFeatured && (
+                <span className="bg-zinc-900 text-white font-black px-4 py-1.5 rounded-2xl shadow-lg text-xs">
+                  منتج مميز ✨
+                </span>
+              )}
+            </div>
+
+            {/* Navigation Arrows (Optional for UX) */}
+            {product.images.length > 1 && (
+              <>
+                <button 
+                  onClick={() => setActiveImage((prev) => (prev > 0 ? prev - 1 : product.images.length - 1))}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 backdrop-blur-md p-2 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-all hover:bg-red-600 hover:text-white"
+                >
+                  <ArrowRight size={20} className="rotate-180" />
+                </button>
+                <button 
+                  onClick={() => setActiveImage((prev) => (prev < product.images.length - 1 ? prev + 1 : 0))}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/80 backdrop-blur-md p-2 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-all hover:bg-red-600 hover:text-white"
+                >
+                  <ArrowRight size={20} />
+                </button>
+              </>
             )}
           </div>
           
+          {/* Thumbnails Gallery */}
           {product.images.length > 1 && (
-            <div className="grid grid-cols-4 gap-4">
+            <div className="flex gap-3 overflow-x-auto pb-2 px-1 scrollbar-hide">
               {product.images.map((img, idx) => (
                 <button
                   key={idx}
                   onClick={() => setActiveImage(idx)}
-                  className={`aspect-square rounded-2xl overflow-hidden border-2 transition-all ${
-                    activeImage === idx ? 'border-red-600 ring-4 ring-red-100' : 'border-transparent opacity-70 hover:opacity-100'
+                  className={`flex-shrink-0 w-20 h-20 rounded-2xl overflow-hidden border-2 transition-all duration-300 relative ${
+                    activeImage === idx 
+                    ? 'border-red-600 ring-4 ring-red-50 scale-95 shadow-md' 
+                    : 'border-transparent opacity-60 hover:opacity-100 hover:scale-105'
                   }`}
                 >
-                  <img src={img} alt="" className="w-full h-full object-cover" />
+                  <img src={img} alt={`Thumbnail ${idx}`} className="w-full h-full object-cover" />
+                  {activeImage === idx && <div className="absolute inset-0 bg-red-600/5" />}
                 </button>
               ))}
             </div>
           )}
         </div>
+
 
         {/* Content Section */}
         <div className="flex flex-col">
