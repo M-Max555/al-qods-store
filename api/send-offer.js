@@ -50,10 +50,8 @@ export default async function handler(req, res) {
 
         const message = `🔥 عرض جديد من معرض القدس!\n\nخصم ${discount}% على ${offerTitle} 💸\n\nشوف العرض دلوقتي:\n${offerUrl || 'https://al-qods-store.vercel.app/offers'}`;
 
-        // WHATSAPP CLOUD API CALL (MOCK/PLACEHOLDER)
-        // You need to replace this with your actual ACCESS_TOKEN and PHONE_NUMBER_ID
-        /*
-        const response = await fetch(`https://graph.facebook.com/v17.0/${process.env.WHATSAPP_PHONE_ID}/messages`, {
+        // 3. WHATSAPP CLOUD API CALL (REAL)
+        const response = await fetch(`https://graph.facebook.com/v19.0/${process.env.WHATSAPP_PHONE_ID}/messages`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${process.env.WHATSAPP_TOKEN}`,
@@ -66,7 +64,11 @@ export default async function handler(req, res) {
             text: { body: message }
           })
         });
-        */
+
+        if (!response.ok) {
+          const errData = await response.json();
+          throw new Error(errData.error?.message || 'WhatsApp API Error');
+        }
 
         // Log the message being sent (Simulating API call)
         console.log(`[WhatsApp] Sent to ${phone}: ${offerTitle}`);
