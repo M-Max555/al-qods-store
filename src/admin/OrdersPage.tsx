@@ -41,12 +41,13 @@ export default function OrdersPage() {
     }
   };
 
-  const updateStatus = async (orderId: string, newStatus: OrderStatusType) => {
+  const updateStatus = async (docId: string, readableId: string, newStatus: OrderStatusType) => {
     try {
-      await orderService.updateOrderStatus(orderId, newStatus);
-      toast.success('تم تحديث حالة الطلب');
-      setOrders(orders.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
+      await orderService.updateOrderStatus(readableId, newStatus);
+      toast.success('تم تحديث حالة الطلب بنجاح 👌');
+      setOrders(orders.map(o => o.id === docId ? { ...o, status: newStatus } : o));
     } catch (error) {
+      console.error('Update status error:', error);
       toast.error('حدث خطأ أثناء التحديث');
     }
   };
@@ -125,7 +126,7 @@ export default function OrdersPage() {
                     <td className="p-4">
                       <select
                         value={order.status}
-                        onChange={(e) => updateStatus(order.id, e.target.value as OrderStatusType)}
+                        onChange={(e) => updateStatus(order.id, order.orderId, e.target.value as OrderStatusType)}
                         className="text-sm bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5 outline-none focus:border-gray-400"
                       >
                         {Object.entries(STATUS_LABELS).map(([key, label]) => (
