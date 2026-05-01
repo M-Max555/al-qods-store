@@ -4,13 +4,20 @@ import { MapPin, Loader2, Phone, Mail, ArrowRight } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase/firestore';
+import { ChangeNameModal, ChangePhoneModal } from '../components/ui/EditProfileModal';
+import { UserCog, Settings } from 'lucide-react';
+
 import toast from 'react-hot-toast';
+
 
 export default function Profile() {
   const { user, isAuthenticated, setUser } = useAuthStore();
   const navigate = useNavigate();
   const [isLocating, setIsLocating] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [showChangeName, setShowChangeName] = useState(false);
+  const [showChangePhone, setShowChangePhone] = useState(false);
+
 
   useEffect(() => {
     if (!isAuthenticated()) {
@@ -133,11 +140,23 @@ export default function Profile() {
                 <h1 className="text-3xl font-black">{user.firstName} {user.lastName}</h1>
                 <p className="text-red-100 mt-1 flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-green-400"></span>
-                  {user.role === 'admin' ? 'مدير النظام' : 'عميل مميز'}
+                  {user.role === 'owner' ? 'صاحب الموقع' : user.role === 'admin' ? 'مدير النظام' : 'عميل مميز'}
                 </p>
               </div>
             </div>
+            
+            {/* Edit Buttons in Header */}
+            <div className="absolute top-8 left-8 flex gap-2">
+              <button 
+                onClick={() => setShowChangeName(true)}
+                className="p-3 bg-white/20 backdrop-blur-md rounded-2xl hover:bg-white/30 transition-all border border-white/30 text-white"
+                title="تعديل الاسم"
+              >
+                <UserCog size={20} />
+              </button>
+            </div>
           </div>
+
 
           <div className="p-8 space-y-8">
             {/* User Info Grid */}
@@ -152,13 +171,22 @@ export default function Profile() {
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
-                  <Phone size={14} /> رقم الهاتف
-                </label>
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
+                    <Phone size={14} /> رقم الهاتف
+                  </label>
+                  <button 
+                    onClick={() => setShowChangePhone(true)}
+                    className="text-[10px] font-bold text-red-600 hover:underline"
+                  >
+                    تعديل
+                  </button>
+                </div>
                 <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100 text-gray-700 font-medium">
                   {user.phone || 'غير محدد'}
                 </div>
               </div>
+
             </div>
 
             {/* Location Section */}
@@ -203,11 +231,11 @@ export default function Profile() {
               </button>
             </div>
 
-            {/* Settings Section (Req #3) */}
-            <div className="space-y-6 pt-8 border-t border-gray-100">
-              <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                <span className="material-symbols-outlined text-red-600">settings</span> الإعدادات
+            <div className="space-y-6 pt-8 border-t border-gray-100 bg-gray-50/50 -mx-8 px-8 pb-8">
+              <h2 className="text-2xl font-black text-gray-900 flex items-center gap-3">
+                <Settings className="text-red-600" size={28} /> الإعدادات العامة
               </h2>
+
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Language Switch */}
@@ -294,7 +322,12 @@ export default function Profile() {
           </div>
         </div>
       </div>
-    </div>
 
+      
+      {/* Modals */}
+      {showChangeName && <ChangeNameModal onClose={() => setShowChangeName(false)} />}
+      {showChangePhone && <ChangePhoneModal onClose={() => setShowChangePhone(false)} />}
+    </div>
   );
 }
+
