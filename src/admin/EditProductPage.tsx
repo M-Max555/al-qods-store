@@ -217,8 +217,6 @@ export default function EditProductPage() {
           </div>
         </div>
 
-        </div>
-
         {/* Brand, Condition, Color */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t border-gray-100">
           <div className="space-y-2">
