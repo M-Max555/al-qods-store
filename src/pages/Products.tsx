@@ -48,6 +48,7 @@ export default function Products() {
   const {
     filteredProducts, isLoading, fetchProducts,
     setFilters, setSearchQuery, clearFilters, filters, searchQuery,
+    products
   } = useProductStore();
   
   const { offers } = useOfferStore();
@@ -57,14 +58,38 @@ export default function Products() {
   const filterParam = searchParams.get('filter') || '';
   const sortParam = searchParams.get('sort') || '';
 
+  // 1. Compute Dynamic Filter Options
+  const brands = Array.from(new Set(products.filter(p => !categoryParam || p.category === categoryParam).map(p => p.brand).filter(Boolean))) as string[];
+  const colors = Array.from(new Set(products.filter(p => !categoryParam || p.category === categoryParam).map(p => p.color).filter(Boolean))) as string[];
+  const conditions = Array.from(new Set(products.filter(p => !categoryParam || p.category === categoryParam).map(p => p.condition).filter(Boolean))) as string[];
+  
+  // Dynamic Attributes based on category
+  const dynamicAttributes: Record<string, string[]> = {};
+  products.filter(p => p.category === categoryParam).forEach(p => {
+    if (p.attributes) {
+      Object.entries(p.attributes).forEach(([key, value]) => {
+        if (!dynamicAttributes[key]) dynamicAttributes[key] = [];
+        const strVal = String(value);
+        if (!dynamicAttributes[key].includes(strVal)) {
+          dynamicAttributes[key].push(strVal);
+        }
+      });
+    }
+  });
+
   useEffect(() => {
     fetchProducts();
   }, []);
 
   useEffect(() => {
-    const newFilters: Record<string, unknown> = {};
+    const newFilters: Record<string, unknown> = { ...filters };
     if (categoryParam) newFilters.category = categoryParam;
     if (sortParam) newFilters.sortBy = sortParam;
+    
+    // Parse array params from URL if needed
+    const brandParam = searchParams.get('brand');
+    if (brandParam) newFilters.brand = brandParam.split(',');
+
     setFilters(newFilters as Parameters<typeof setFilters>[0]);
 
     if (searchParam) {
@@ -73,23 +98,66 @@ export default function Products() {
     }
   }, [categoryParam, searchParam, filterParam, sortParam]);
 
+  // 2. Debounce Search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (localSearch !== searchParam) {
+        setSearchQuery(localSearch);
+        setSearchParams((prev) => {
+          if (localSearch) prev.set('search', localSearch);
+          else prev.delete('search');
+          return prev;
+        });
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [localSearch]);
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setSearchQuery(localSearch);
+  };
+
+  const handleCategoryFilter = (slug: string) => {
+    setFilters({ category: slug || undefined, brand: [], color: [], condition: [], attributes: {} });
     setSearchParams((prev) => {
-      if (localSearch) prev.set('search', localSearch);
-      else prev.delete('search');
+      if (slug) prev.set('category', slug);
+      else prev.delete('category');
+      // Reset other filters in URL
+      prev.delete('brand');
+      prev.delete('color');
+      prev.delete('condition');
       return prev;
     });
   };
 
-  const handleCategoryFilter = (slug: string) => {
-    setFilters({ category: slug || undefined });
+  const toggleMultiSelect = (key: keyof typeof filters, value: string) => {
+    const current = (filters[key] as string[]) || [];
+    const updated = current.includes(value) 
+      ? current.filter(v => v !== value) 
+      : [...current, value];
+    
+    setFilters({ [key]: updated });
+    
     setSearchParams((prev) => {
-      if (slug) prev.set('category', slug);
-      else prev.delete('category');
+      if (updated.length > 0) prev.set(key as string, updated.join(','));
+      else prev.delete(key as string);
       return prev;
     });
+  };
+
+  const toggleAttribute = (key: string, value: string) => {
+    const currentAttr = filters.attributes || {};
+    const currentValues = currentAttr[key] || [];
+    const updatedValues = currentValues.includes(value)
+      ? currentValues.filter(v => v !== value)
+      : [...currentValues, value];
+    
+    const updatedAttr = { ...currentAttr };
+    if (updatedValues.length > 0) updatedAttr[key] = updatedValues;
+    else delete updatedAttr[key];
+
+    setFilters({ attributes: updatedAttr });
   };
 
   const handleSortChange = (value: string) => {
@@ -103,6 +171,10 @@ export default function Products() {
 
   const handlePriceRange = (min: number, max: number) => {
     setFilters({ minPrice: min, maxPrice: max });
+  };
+
+  const handleRatingFilter = (rating: number) => {
+    setFilters({ rating: filters.rating === rating ? undefined : rating });
   };
 
   const handleClearAll = () => {
@@ -122,7 +194,10 @@ export default function Products() {
     ? [...filteredProducts].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     : filteredProducts;
 
-  const hasActiveFilters = !!filters.category || !!filters.minPrice || !!filters.maxPrice || !!searchQuery;
+  const hasActiveFilters = !!filters.category || !!filters.minPrice || !!filters.maxPrice || !!searchQuery || 
+                           (filters.brand?.length || 0) > 0 || (filters.color?.length || 0) > 0 || 
+                           (filters.condition?.length || 0) > 0 || !!filters.rating || 
+                           Object.keys(filters.attributes || {}).length > 0;
 
   return (
     <div className="min-h-screen bg-surface-container-low animate-fade-in">
@@ -149,9 +224,14 @@ export default function Products() {
                 ? 'العروض والتخفيضات'
                 : 'جميع المنتجات'}
             </h1>
-            <p className="text-secondary text-sm mt-1">
-              {isLoading ? 'جاري التحميل...' : `${displayProducts.length} منتج`}
-            </p>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="inline-flex items-center justify-center bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                {displayProducts.length}
+              </span>
+              <p className="text-secondary text-sm">
+                {isLoading ? 'جاري التحميل...' : 'منتج تم العثور عليه'}
+              </p>
+            </div>
           </div>
         </div>
 
@@ -221,6 +301,26 @@ export default function Products() {
                 </div>
               </div>
 
+              {/* Brands */}
+              {brands.length > 1 && (
+                <div className="bg-white rounded-2xl p-4 border border-surface-container">
+                  <h3 className="font-bold text-on-surface mb-3 text-sm">العلامة التجارية</h3>
+                  <div className="space-y-2">
+                    {brands.map((brand) => (
+                      <label key={brand} className="flex items-center gap-2 cursor-pointer group">
+                        <input
+                          type="checkbox"
+                          checked={filters.brand?.includes(brand)}
+                          onChange={() => toggleMultiSelect('brand', brand)}
+                          className="w-4 h-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
+                        />
+                        <span className="text-sm text-secondary group-hover:text-on-surface transition-colors">{brand}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Price Range */}
               <div className="bg-white rounded-2xl p-4 border border-surface-container">
                 <h3 className="font-bold text-on-surface mb-3 text-sm">نطاق السعر</h3>
@@ -240,6 +340,71 @@ export default function Products() {
                   ))}
                 </div>
               </div>
+
+              {/* Rating Filter */}
+              <div className="bg-white rounded-2xl p-4 border border-surface-container">
+                <h3 className="font-bold text-on-surface mb-3 text-sm">التقييم</h3>
+                <div className="space-y-1">
+                  {[4, 3, 2].map((r) => (
+                    <button
+                      key={r}
+                      onClick={() => handleRatingFilter(r)}
+                      className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-sm transition-colors ${
+                        filters.rating === r
+                          ? 'bg-red-50 text-red-600 font-semibold'
+                          : 'text-secondary hover:bg-surface-container-low'
+                      }`}
+                    >
+                      <span className="flex items-center gap-1">
+                        <span className="text-amber-500">★</span>
+                        <span>{r} نجوم وأكثر</span>
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Conditions */}
+              {conditions.length > 1 && (
+                <div className="bg-white rounded-2xl p-4 border border-surface-container">
+                  <h3 className="font-bold text-on-surface mb-3 text-sm">الحالة</h3>
+                  <div className="space-y-2">
+                    {conditions.map((cond) => (
+                      <label key={cond} className="flex items-center gap-2 cursor-pointer group">
+                        <input
+                          type="checkbox"
+                          checked={filters.condition?.includes(cond)}
+                          onChange={() => toggleMultiSelect('condition', cond)}
+                          className="w-4 h-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
+                        />
+                        <span className="text-sm text-secondary group-hover:text-on-surface transition-colors">
+                          {cond === 'new' ? 'جديد' : cond === 'refurbished' ? 'مجدد' : 'مستعمل'}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Dynamic Attributes */}
+              {Object.entries(dynamicAttributes).map(([key, values]) => (
+                <div key={key} className="bg-white rounded-2xl p-4 border border-surface-container">
+                  <h3 className="font-bold text-on-surface mb-3 text-sm capitalize">{key}</h3>
+                  <div className="space-y-2">
+                    {values.map((val) => (
+                      <label key={val} className="flex items-center gap-2 cursor-pointer group">
+                        <input
+                          type="checkbox"
+                          checked={filters.attributes?.[key]?.includes(val)}
+                          onChange={() => toggleAttribute(key, val)}
+                          className="w-4 h-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
+                        />
+                        <span className="text-sm text-secondary group-hover:text-on-surface transition-colors">{val}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              ))}
 
               {/* Clear Filters */}
               {hasActiveFilters && (
@@ -281,6 +446,22 @@ export default function Products() {
                     <span className="flex items-center gap-1 bg-red-50 text-red-600 text-xs font-medium px-2.5 py-1 rounded-lg">
                       {staticCategories.find((c) => c.slug === filters.category)?.nameAr}
                       <button onClick={() => handleCategoryFilter('')}>
+                        <X size={11} />
+                      </button>
+                    </span>
+                  )}
+                  {filters.brand?.map(b => (
+                    <span key={b} className="flex items-center gap-1 bg-red-50 text-red-600 text-xs font-medium px-2.5 py-1 rounded-lg">
+                      {b}
+                      <button onClick={() => toggleMultiSelect('brand', b)}>
+                        <X size={11} />
+                      </button>
+                    </span>
+                  ))}
+                  {filters.rating && (
+                    <span className="flex items-center gap-1 bg-amber-50 text-amber-600 text-xs font-medium px-2.5 py-1 rounded-lg">
+                      {filters.rating}★ +
+                      <button onClick={() => handleRatingFilter(filters.rating!)}>
                         <X size={11} />
                       </button>
                     </span>
@@ -335,14 +516,21 @@ export default function Products() {
             {isLoading ? (
               <ProductGridSkeleton count={8} />
             ) : displayProducts.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-20 text-center">
-                <div className="w-20 h-20 bg-surface-container rounded-full flex items-center justify-center mb-4">
-                  <TrendingUp size={32} className="text-secondary" />
+              <div className="flex flex-col items-center justify-center py-20 text-center bg-white rounded-3xl border border-dashed border-gray-200">
+                <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mb-6">
+                  <Search size={32} className="text-red-600" />
                 </div>
-                <h3 className="font-bold text-on-surface text-lg mb-1">لا توجد منتجات</h3>
-                <p className="text-secondary text-sm mb-5">لم يتم العثور على منتجات تطابق بحثك</p>
-                <button onClick={handleClearAll} className="btn-primary text-sm">
-                  مسح الفلاتر
+                <h3 className="font-black text-on-surface text-xl mb-2">لم نجد ما تبحث عنه بالضبط</h3>
+                <p className="text-secondary text-sm mb-8 max-w-xs mx-auto">
+                  جرب تغيير كلمات البحث أو مسح الفلاتر للحصول على نتائج أفضل
+                </p>
+                <div className="flex flex-wrap justify-center gap-3 mb-8">
+                  <button onClick={() => setLocalSearch('ثلاجة')} className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-xl text-xs font-bold transition-all">ثلاجات</button>
+                  <button onClick={() => setLocalSearch('غسالة')} className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-xl text-xs font-bold transition-all">غسالات</button>
+                  <button onClick={() => setLocalSearch('بوتاجاز')} className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-xl text-xs font-bold transition-all">بوتاجازات</button>
+                </div>
+                <button onClick={handleClearAll} className="btn-primary px-10">
+                  مسح جميع الفلاتر
                 </button>
               </div>
             ) : viewMode === 'grid' ? (

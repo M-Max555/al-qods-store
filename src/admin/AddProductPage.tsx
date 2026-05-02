@@ -23,12 +23,17 @@ export default function AddProductPage() {
     category: CATEGORY_OPTIONS[0].key,
     stock: 0,
     sku: '',
+    brand: '',
+    condition: 'new' as 'new' | 'used' | 'refurbished',
+    color: '',
     isFeatured: false,
     isOffer: false,
     shippingDetails: 'شحن سريع ومجاني للطلبات فوق 5000 ج.م',
     warranty: 'ضمان سنتين من الوكيل المعتمد',
     returnPolicy: 'إمكانية الاستبدال أو الاسترجاع خلال 14 يوم',
   });
+
+  const [attributes, setAttributes] = useState<{key: string, value: string}[]>([]);
 
   const finalPrice = Math.max(0, formData.price - (formData.price * formData.discount) / 100);
 
@@ -103,6 +108,10 @@ export default function AddProductPage() {
         description: formData.descriptionAr,
         images: uploadedUrls,
         finalPrice,
+        brand: formData.brand,
+        condition: formData.condition,
+        color: formData.color,
+        attributes: attributes.reduce((acc, curr) => ({ ...acc, [curr.key]: curr.value }), {}),
         rating: 5,
         reviewCount: 0,
         ratingAverage: 5,
@@ -160,6 +169,93 @@ export default function AddProductPage() {
                 <option key={cat.key} value={cat.key}>{cat.label}</option>
               ))}
             </select>
+          </div>
+        </div>
+
+        </div>
+
+        {/* Brand, Condition, Color */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t border-gray-100">
+          <div className="space-y-2">
+            <label className="text-sm font-semibold text-gray-700">العلامة التجارية</label>
+            <input
+              type="text"
+              value={formData.brand}
+              onChange={(e) => setFormData({...formData, brand: e.target.value})}
+              placeholder="مثلاً: LG, Samsung..."
+              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-red-500 focus:ring-2 focus:ring-red-200 outline-none"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-semibold text-gray-700">الحالة</label>
+            <select
+              value={formData.condition}
+              onChange={(e) => setFormData({...formData, condition: e.target.value as any})}
+              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-red-500 focus:ring-2 focus:ring-red-200 outline-none"
+            >
+              <option value="new">جديد</option>
+              <option value="used">مستعمل</option>
+              <option value="refurbished">مجدد</option>
+            </select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-semibold text-gray-700">اللون</label>
+            <input
+              type="text"
+              value={formData.color}
+              onChange={(e) => setFormData({...formData, color: e.target.value})}
+              placeholder="مثلاً: أسود, فضي..."
+              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-red-500 focus:ring-2 focus:ring-red-200 outline-none"
+            />
+          </div>
+        </div>
+
+        {/* Dynamic Attributes */}
+        <div className="space-y-4 pt-4 border-t border-gray-100">
+          <label className="text-sm font-bold text-gray-900">المواصفات الفنية (Attributes)</label>
+          <div className="space-y-3">
+            {attributes.map((attr, index) => (
+              <div key={index} className="flex gap-3 items-center">
+                <input
+                  type="text"
+                  placeholder="الخاصية (مثلاً: السعة)"
+                  value={attr.key}
+                  onChange={(e) => {
+                    const newAttrs = [...attributes];
+                    newAttrs[index].key = e.target.value;
+                    setAttributes(newAttrs);
+                  }}
+                  className="flex-1 px-4 py-2 rounded-xl border border-gray-200 outline-none"
+                />
+                <input
+                  type="text"
+                  placeholder="القيمة (مثلاً: 500 لتر)"
+                  value={attr.value}
+                  onChange={(e) => {
+                    const newAttrs = [...attributes];
+                    newAttrs[index].value = e.target.value;
+                    setAttributes(newAttrs);
+                  }}
+                  className="flex-1 px-4 py-2 rounded-xl border border-gray-200 outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => setAttributes(attributes.filter((_, i) => i !== index))}
+                  className="p-2 text-red-500 hover:bg-red-50 rounded-lg"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={() => setAttributes([...attributes, { key: '', value: '' }])}
+              className="text-sm text-red-600 font-bold hover:underline"
+            >
+              + إضافة خاصية جديدة
+            </button>
           </div>
         </div>
 

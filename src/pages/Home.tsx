@@ -210,9 +210,33 @@ export default function Home() {
               <p className="text-red-100 text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">{t('home_repair_service')}</p>
             </div>
 
-          </Link>
         </div>
       </section>
+
+      {/* ─── Shop by Brand ────────────────────────────────────────────────── */}
+      {Array.from(new Set(products.map(p => p.brand).filter(Boolean))).length > 0 && (
+        <section className="bg-white py-12">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6">
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="font-headline-lg border-r-4 border-red-600 pr-4">تسوق حسب الماركة</h2>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
+              {Array.from(new Set(products.map(p => p.brand).filter(Boolean))).slice(0, 12).map((brand) => (
+                <Link
+                  key={brand}
+                  to={`/products?brand=${encodeURIComponent(brand!)}`}
+                  className="flex flex-col items-center justify-center p-6 bg-surface-container-low rounded-3xl border border-transparent hover:border-red-200 hover:bg-white hover:shadow-xl transition-all group"
+                >
+                  <div className="w-16 h-16 rounded-2xl bg-white flex items-center justify-center mb-3 shadow-sm group-hover:scale-110 transition-transform">
+                    <span className="font-black text-xl text-gray-400 group-hover:text-red-600">{brand![0].toUpperCase()}</span>
+                  </div>
+                  <span className="font-bold text-gray-700 group-hover:text-red-600 text-sm">{brand}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ─── Req #3: Categories — EXACTLY 5, circular icons ────────────── */}
       <section className="bg-surface-container-low py-16">

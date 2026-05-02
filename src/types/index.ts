@@ -33,6 +33,10 @@ export interface Product {
   returnPolicy?: string; // NEW: Return policy
   stock: number;
   sku: string;
+  brand?: string;
+  condition?: 'new' | 'used' | 'refurbished';
+  color?: string;
+  attributes?: Record<string, string | number>;
   tags: string[];
   createdAt: string;
   updatedAt?: string;
@@ -135,8 +139,13 @@ export interface Category {
 
 export interface ProductFilters {
   category?: string;
+  brand?: string[];
+  color?: string[];
+  condition?: string[];
+  rating?: number;
   minPrice?: number;
   maxPrice?: number;
+  attributes?: Record<string, string[]>;
   sortBy?: 'price_asc' | 'price_desc' | 'rating' | 'newest' | 'popular';
 }
 
