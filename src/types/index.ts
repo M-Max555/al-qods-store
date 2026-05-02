@@ -113,6 +113,7 @@ export interface Order {
   id: string;
   orderId: string;
   userId: string;
+  customerName?: string;
   items: OrderItem[];
   totalPrice: number;
   shippingCost: number;

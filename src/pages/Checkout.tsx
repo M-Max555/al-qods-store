@@ -140,6 +140,7 @@ export default function Checkout() {
 
       await orderService.createOrder({
         userId: user.id,
+        customerName: `${user.firstName} ${user.lastName}`,
         items: orderItems,
         totalPrice: total,
         shippingCost: shipping,

@@ -3,7 +3,16 @@ import { orderService } from '../firebase/services/orderService';
 import type { Order, OrderStatusType } from '../types';
 import toast from 'react-hot-toast';
 import { formatPrice } from '../utils/format';
-// lucide-react not used currently
+import { 
+  Search, 
+  MapPin, 
+  Clock, 
+  User as UserIcon, 
+  Package, 
+  ChevronDown, 
+  ExternalLink,
+  Phone
+} from 'lucide-react';
 
 const STATUS_LABELS: Record<OrderStatusType, string> = {
   pending: 'قيد التنفيذ',
@@ -87,52 +96,130 @@ export default function OrdersPage() {
           <table className="w-full text-right">
             <thead className="bg-gray-50 border-b border-gray-100">
               <tr>
-                <th className="p-4 font-semibold text-gray-600">رقم الطلب</th>
-                <th className="p-4 font-semibold text-gray-600">التاريخ</th>
-                <th className="p-4 font-semibold text-gray-600">العميل</th>
-                <th className="p-4 font-semibold text-gray-600">الإجمالي</th>
-                <th className="p-4 font-semibold text-gray-600">الحالة</th>
-                <th className="p-4 font-semibold text-gray-600">تحديث الحالة</th>
+                <th className="p-4 font-bold text-gray-700 text-sm">رقم الطلب</th>
+                <th className="p-4 font-bold text-gray-700 text-sm">التاريخ والوقت</th>
+                <th className="p-4 font-bold text-gray-700 text-sm">العميل</th>
+                <th className="p-4 font-bold text-gray-700 text-sm">المنتجات</th>
+                <th className="p-4 font-bold text-gray-700 text-sm">الموقع والتوصيل</th>
+                <th className="p-4 font-bold text-gray-700 text-sm">الإجمالي</th>
+                <th className="p-4 font-bold text-gray-700 text-sm">الحالة</th>
+                <th className="p-4 font-bold text-gray-700 text-sm text-center">تحديث الحالة</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {isLoading ? (
                 <tr>
-                  <td colSpan={6} className="p-8 text-center text-gray-500">جاري التحميل...</td>
+                  <td colSpan={9} className="p-12 text-center">
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="w-10 h-10 border-4 border-red-600 border-t-transparent rounded-full animate-spin" />
+                      <p className="text-gray-500 font-bold">جاري تحميل الطلبات...</p>
+                    </div>
+                  </td>
                 </tr>
               ) : filteredOrders.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="p-8 text-center text-gray-500">لا يوجد طلبات بهذا التصنيف</td>
+                  <td colSpan={9} className="p-12 text-center">
+                    <div className="flex flex-col items-center gap-2 text-gray-400">
+                      <Search size={48} strokeWidth={1.5} />
+                      <p className="font-bold text-lg">لا توجد طلبات بهذا التصنيف</p>
+                    </div>
+                  </td>
                 </tr>
               ) : (
                 filteredOrders.map((order) => (
-                  <tr key={order.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="p-4 font-medium text-gray-900">{order.orderId}</td>
-                    <td className="p-4 text-gray-600">
-                      {new Date(order.createdAt).toLocaleDateString('ar-EG')}
-                    </td>
+                  <tr key={order.id} className="hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-0">
                     <td className="p-4">
-                      <div>
-                        <p className="text-gray-900">{order.phone}</p>
-                        <p className="text-xs text-gray-500 max-w-[150px] truncate">{order.address}</p>
+                      <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded-md text-gray-600 border border-gray-200">
+                        {order.orderId}
+                      </span>
+                    </td>
+                    
+                    <td className="p-4">
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-1.5 text-gray-900 font-bold text-sm">
+                          <Clock size={14} className="text-red-600" />
+                          <span>{new Date(order.createdAt).toLocaleDateString('ar-EG', { day: 'numeric', month: 'short' })}</span>
+                        </div>
+                        <span className="text-[10px] text-gray-500 font-medium mr-5">
+                          {new Date(order.createdAt).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}
+                        </span>
                       </div>
                     </td>
-                    <td className="p-4 text-red-600 font-bold">{formatPrice(order.totalPrice)}</td>
+
                     <td className="p-4">
-                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${STATUS_COLORS[order.status]}`}>
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-1.5 text-gray-900 font-bold text-sm">
+                          <UserIcon size={14} className="text-blue-600" />
+                          <span>{order.customerName || 'عميل غير مسجل'}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 text-xs text-gray-500 mr-5">
+                          <Phone size={12} />
+                          <span className="font-mono">{order.phone}</span>
+                        </div>
+                      </div>
+                    </td>
+
+                    <td className="p-4">
+                      <div className="flex flex-col gap-1.5">
+                        {order.items.slice(0, 2).map((item, idx) => (
+                          <div key={idx} className="flex items-center gap-2">
+                            <img src={item.image} alt="" className="w-6 h-6 rounded-md object-cover border border-gray-100" />
+                            <span className="text-xs font-bold text-gray-700 truncate max-w-[120px]">{item.name}</span>
+                            <span className="text-[10px] bg-gray-100 px-1.5 py-0.5 rounded text-gray-500">x{item.quantity}</span>
+                          </div>
+                        ))}
+                        {order.items.length > 2 && (
+                          <span className="text-[10px] text-red-600 font-bold mr-8">+ {order.items.length - 2} منتجات أخرى</span>
+                        )}
+                      </div>
+                    </td>
+
+                    <td className="p-4">
+                      <div className="flex flex-col gap-1 max-w-[180px]">
+                        <div className="flex items-start gap-1.5 text-xs text-gray-600">
+                          <MapPin size={14} className="text-red-600 shrink-0 mt-0.5" />
+                          <span className="line-clamp-2 leading-relaxed font-medium">{order.address}</span>
+                        </div>
+                        {order.location && (
+                          <a 
+                            href={`https://www.google.com/maps?q=${order.location.lat},${order.location.lng}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1 text-[10px] text-blue-600 hover:underline font-bold mr-5 mt-1"
+                          >
+                            <ExternalLink size={10} />
+                            <span>عرض على الخريطة</span>
+                          </a>
+                        )}
+                      </div>
+                    </td>
+
+                    <td className="p-4">
+                      <div className="flex flex-col items-end">
+                        <span className="text-red-600 font-black text-sm">{formatPrice(order.totalPrice)}</span>
+                        <span className="text-[10px] text-gray-400">شامل الضريبة</span>
+                      </div>
+                    </td>
+
+                    <td className="p-4">
+                      <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider shadow-sm ${STATUS_COLORS[order.status]}`}>
                         {STATUS_LABELS[order.status]}
                       </span>
                     </td>
+
                     <td className="p-4">
-                      <select
-                        value={order.status}
-                        onChange={(e) => updateStatus(order.id, order.orderId, e.target.value as OrderStatusType)}
-                        className="text-sm bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5 outline-none focus:border-gray-400"
-                      >
-                        {Object.entries(STATUS_LABELS).map(([key, label]) => (
-                          <option key={key} value={key}>{label}</option>
-                        ))}
-                      </select>
+                      <div className="relative group">
+                        <select
+                          value={order.status}
+                          onChange={(e) => updateStatus(order.id, order.orderId, e.target.value as OrderStatusType)}
+                          className="w-full appearance-none bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-bold text-gray-700 outline-none focus:ring-2 focus:ring-red-100 focus:border-red-400 transition-all cursor-pointer"
+                        >
+                          {Object.entries(STATUS_LABELS).map(([key, label]) => (
+                            <option key={key} value={key}>{label}</option>
+                          ))}
+                        </select>
+                        <ChevronDown size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none group-hover:text-red-600 transition-colors" />
+                      </div>
                     </td>
                   </tr>
                 ))
