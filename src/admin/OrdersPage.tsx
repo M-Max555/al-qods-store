@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { orderService } from '../firebase/services/orderService';
+import { userService } from '../firebase/services/userService';
 import type { Order, OrderStatusType } from '../types';
 import toast from 'react-hot-toast';
 import { formatPrice } from '../utils/format';
@@ -32,6 +33,7 @@ const STATUS_COLORS: Record<OrderStatusType, string> = {
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
+  const [userNames, setUserNames] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState<OrderStatusType | 'all'>('all');
 
@@ -41,13 +43,38 @@ export default function OrdersPage() {
 
   const fetchOrders = async () => {
     try {
-      const allOrders = await orderService.getAllOrders();
+      const [allOrders, allUsers] = await Promise.all([
+        orderService.getAllOrders(),
+        userService.getAllUsers()
+      ]);
+      
+      const nameMap: Record<string, string> = {};
+      allUsers.forEach(u => {
+        nameMap[u.id] = `${u.firstName} ${u.lastName}`;
+      });
+      
+      setUserNames(nameMap);
       setOrders(allOrders);
     } catch (error) {
       toast.error('حدث خطأ أثناء تحميل الطلبات');
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const formatDate = (date: any) => {
+    if (!date) return 'بدون تاريخ';
+    
+    let d: Date;
+    // Handle Firestore Timestamp object
+    if (date && typeof date === 'object' && 'seconds' in date) {
+      d = new Date(date.seconds * 1000);
+    } else {
+      d = new Date(date);
+    }
+
+    if (isNaN(d.getTime())) return 'تاريخ غير صالح';
+    return d;
   };
 
   const updateStatus = async (docId: string, readableId: string, newStatus: OrderStatusType) => {
@@ -138,10 +165,16 @@ export default function OrdersPage() {
                       <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-1.5 text-gray-900 font-bold text-sm">
                           <Clock size={14} className="text-red-600" />
-                          <span>{new Date(order.createdAt).toLocaleDateString('ar-EG', { day: 'numeric', month: 'short' })}</span>
+                          <span>
+                            {typeof formatDate(order.createdAt) === 'string' 
+                              ? formatDate(order.createdAt) 
+                              : (formatDate(order.createdAt) as Date).toLocaleDateString('ar-EG', { day: 'numeric', month: 'short' })}
+                          </span>
                         </div>
                         <span className="text-[10px] text-gray-500 font-medium mr-5">
-                          {new Date(order.createdAt).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}
+                          {typeof formatDate(order.createdAt) === 'string' 
+                            ? '' 
+                            : (formatDate(order.createdAt) as Date).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}
                         </span>
                       </div>
                     </td>
@@ -150,7 +183,7 @@ export default function OrdersPage() {
                       <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-1.5 text-gray-900 font-bold text-sm">
                           <UserIcon size={14} className="text-blue-600" />
-                          <span>{order.customerName || 'عميل غير مسجل'}</span>
+                          <span>{order.customerName || userNames[order.userId] || 'عميل مجهول'}</span>
                         </div>
                         <div className="flex items-center gap-1.5 text-xs text-gray-500 mr-5">
                           <Phone size={12} />
